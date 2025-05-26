@@ -20,8 +20,8 @@ function getCurrentDirectory() {
     return relevantPath.join("/");
   }
 
-  const file = parts.pop() || "welcome.html";
-  return file.replace(".html", "") || "welcome";
+  const file = parts.pop() || "Desktop.html";
+  return file.replace(".html", "") || "Desktop";
 }
 
 function clearAnimationTimeouts() {
@@ -73,7 +73,7 @@ function renderHeader() {
     <div class="terminal-header">
       <div class="terminal-line">
         <span class="red">root</span><span class="skull">${skullSymbol}</span><span id="username" class="blue">${username}</span>:~$
-        <span id="directory-path">/home/${currentDir}</span>
+        <span id="directory-path">/home/k00kx/${currentDir}</span>
       </div>
       <div class="cursor-line"><span class="cursor"></span></div>
 
