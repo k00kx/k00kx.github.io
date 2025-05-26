@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Connection Lost</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet"/>
+</head>
+<body class="home">
+
+  <div id="header-container"></div>
+
+  <div class="container error-screen">
+    <pre class="ascii">
+  ░█▀█░█▀█░█▀▄░█▀▀░█▀▀
+  ░█▀█░█▀█░█▀▄░█░█░█▀▀
+  ░▀░▀░▀░▀░▀░▀░▀▀▀░▀▀▀
+    </pre>
+
+    <p class="error-title">Connection to /home/<span class="red">target</span> directory <span class="red">lost</span>.</p>
+    <p class="error-sub">The resource you’re trying to reach does not exist or has been moved.</p>
+    <p class="error-sub">Attempting to reconnect...</p>
+
+    <a href="welcome.html" class="retry-link">↩ Return to Home</a>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    renderHeader();
+  </script>
+</body>
+</html>
