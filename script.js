@@ -84,6 +84,7 @@ function renderHeader() {
             <div class="submenu">
               <span onclick="toggleSubmenu('htb-links')">HackTheBox</span>
               <div class="links" id="htb-links" style="display: none;">
+              <a href="/writeups/htb/puppy.html">Puppy</a>
               </div>
             </div>
             <div class="submenu">
