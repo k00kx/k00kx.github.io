@@ -1,0 +1,78 @@
+# ================================
+# SYSTEM FILES (Windows, macOS, Linux)
+# ================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+*.swp
+*.lock
+*.tmp
+*.bak
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.nfs*
+
+# ================================
+# NODE / JAVASCRIPT / FRONTEND
+# ================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+dist/
+build/
+.cache/
+.eslintcache
+.vscode/
+.env
+.env.*.local
+
+# React / Vite / Vue / Others
+*.log
+*.local
+*.pid
+*.seed
+*.pid.lock
+
+# ================================
+# HTML / CSS
+# ================================
+*.css.map
+*.scssc
+*.sass-cache
+*.csslintrc
+*.stylelintrc
+
+# ================================
+# OTHER COMMON FRONTEND FILES
+# ================================
+coverage/
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.log
+
+# ================================
+# GIT CONFIG / BACKUP
+# ================================
+*.orig
+*.rej
+*.bak
+*.old
+*.tmp
