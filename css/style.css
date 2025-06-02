@@ -1,0 +1,86 @@
+/* --------- base -----------------------------------------------------------*/
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  margin:0;
+  font-family:'Fira Code',monospace;
+  color:#fff;
+  background:#000 radial-gradient(#003300 1px,transparent 1px) 0/20px 20px;
+  overflow-x:hidden
+}
+
+/* --------- terminal header -----------------------------------------------*/
+.terminal-header{padding:40px 20px 10px;text-align:center}
+.terminal-line{font-size:1.5rem;margin-bottom:10px}
+.red{color:red;font-weight:bold}
+.blue{color:#339CFF;font-weight:bold}
+.skull{color:red;margin:0 4px}
+#directory-path{font-weight:bold}
+.separator{margin:15px auto;border:none;border-top:1px solid #555;width:80%}
+.cursor-line{display:flex;justify-content:center;align-items:center;height:20px;margin:20px auto}
+.cursor{background:#fff;width:10px;height:20px;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* --------- nav menu -------------------------------------------------------*/
+.nav-links{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:10px}
+.dropdown{position:relative}
+.dropbtn{
+  background:transparent;border:none;cursor:pointer;
+  color:#339CFF;font:bold 1rem 'Fira Code',monospace;padding:10px
+}
+.dropdown-content{
+  display:none;position:absolute;top:100%;left:0;min-width:200px;
+  background:#111;border:1px solid #555;box-shadow:0 4px 6px rgba(0,0,0,.5);
+  flex-direction:column;z-index:10;padding:5px 0
+}
+.dropdown:hover .dropdown-content{display:flex}
+.submenu span{color:#339CFF;font-weight:bold;padding:8px 16px;cursor:pointer;display:block}
+.links{display:none;padding-left:10px}
+.submenu span:hover + .links,.links:hover{display:block}
+.links a{display:block;color:red;text-decoration:none;padding:6px 16px;font-size:.95rem}
+.links a:hover{background:#222}
+
+/* --------- markdown -------------------------------------------------------*/
+.markdown-container{max-width:1000px;margin:40px auto;padding:0 20px}
+.markdown-body{line-height:1.6}
+.markdown-body h1,.markdown-body h2,.markdown-body h3{
+  color:#339CFF;margin-top:40px;padding-bottom:5px;border-bottom:none
+}
+.markdown-body pre{
+  background:#1e1e2e;color:#00FF00;padding:10px;border:1px solid #333;
+  border-radius:8px;box-shadow:4px 4px 12px rgba(128,128,128,.3);overflow-x:auto;margin-bottom:20px
+}
+.markdown-body code{background:#111;color:#00FF00;padding:2px 6px}
+.markdown-body pre code{
+  background:none;color:#a79f9f;font-size:.8rem;display:block;
+  white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word
+}
+.markdown-body a{color:#339CFF;text-decoration:none}
+.markdown-body a:hover{text-decoration:underline}
+.markdown-body img{max-width:100%;display:block;margin:30px auto}
+
+/* --------- paragraphs & inline code --------------------------------------*/
+.indent-paragraph{text-indent:5em;text-align:justify;margin:1em 0}
+p code{
+  background:none!important;color:#9effa1!important;padding:0;border:none;font-size:1rem
+}
+p code+span.codefix{margin-left:-.5em}
+
+/* --------- extras ---------------------------------------------------------*/
+#error{color:red}
+#tsparticles{position:fixed;inset:0;pointer-events:none;z-index:-1}
+
+/* --------- error page elements -------------------------------------------*/
+.error-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;min-height:60vh;margin-top:30px
+}
+.walking-gif{
+  width:200px;height:auto;margin-bottom:20px;
+  filter:brightness(0) saturate(100%) invert(58%) sepia(96%) saturate(748%) hue-rotate(84deg) brightness(92%) contrast(91%)
+}
+
+/* --------- puppy banner ---------------------------------------------------*/
+.machine-banner{text-align:center;margin-top:20px}
+.machine-banner img{width:150px;height:auto;filter:drop-shadow(0 0 4px red)}
+
+.htb-link{color:#339CFF;font-weight:bold;text-decoration:none}
