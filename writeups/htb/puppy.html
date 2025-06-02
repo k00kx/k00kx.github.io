@@ -116,9 +116,11 @@ SMB         <IP>     445    DC               [+] PUPPY.HTB\\levi.james:KingofAkr
 <p class="indent-paragraph">
 Since we now know the domain is <span class="blue">PUPPY.HTB</span> and the hostname of the controller is simply<code>DC</code><span class="codefix">,</span> it’s a safe bet that<code>dc.puppy.htb</code> will resolve internally. Adding this entry to our local resolver will allow us to refer to the domain controller by name instead of IP, which comes in handy when dealing with SMB, Kerberos, and other AD protocols. 
 </p>
-<span class="red">nano /etc/hosts</span>
+
 
 \`\`\`
+~$ nano /etc/hosts
+
 <IP>   dc.puppy.htb
 \`\`\`
 
@@ -246,8 +248,9 @@ dn: CN=Levi B. James,OU=MANPOWER,DC=PUPPY,DC=HTB
 With Levi’s distinguished name in hand, we prepare an LDIF (LDAP Data Interchange Format) file — a simple, structured format used to define changes to directory entries. In this case, the file contains four essential lines: the first line,<code>dn: CN=DEVELOPERS,DC=PUPPY,DC=HTB</code><span class="codefix">,</span> specifies the exact object we intend to modify (the DEVELOPERS group); the second line,<code>changetype: modify</code><span class="codefix">,</span> tells the LDAP server this is a modification operation; the third line,<code>add: member</code><span class="codefix">,</span> defines the attribute we are appending to; and the final line,<code>member: CN=Levi B. James,OU=MANPOWER,DC=PUPPY,DC=HTB</code><span class="codefix">,</span> inserts Levi’s DN as a new group member. This small file effectively instructs the domain controller to enroll Levi into the DEVELOPERS group — and with the proper permissions in place, it’s all done in a single silent move.
 </p>
 
-<span class="red">nano modify-developers-group.ldif</span>
 \`\`\`
+~$ nano modify-developers-group.ldif
+
 dn: CN=DEVELOPERS,DC=PUPPY,DC=HTB
 changetype: modify
 add: member
