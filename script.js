@@ -111,3 +111,44 @@ function renderHeader() {
 window.onload = () => {
   renderHeader();
 };
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("tsparticles")) {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js";
+    script.onload = () => {
+      tsParticles.load("tsparticles", {
+        background: { color: { value: "#00000000" } },
+        fpsLimit: 60,
+        particles: {
+          color: { value: "#66ccff" },
+          links: {
+            color: "#66ccff",
+            distance: 130,
+            enable: true,
+            opacity: 0.25,
+            width: 1
+          },
+          move: {
+            enable: true,
+            speed: 0.4,
+            direction: "none",
+            outModes: "bounce"
+          },
+          number: {
+            value: 80,
+            density: {
+              enable: true,
+              area: 800
+            }
+          },
+          opacity: { value: 0.4 },
+          shape: { type: "circle" },
+          size: { value: { min: 1, max: 3 } }
+        },
+        detectRetina: true
+      });
+    };
+    document.head.appendChild(script);
+  }
+});
