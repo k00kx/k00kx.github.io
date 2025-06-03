@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CRTA-Lab</title>
+
+  <!-- ───── portfolio metadata ───── -->
+  <meta name="portfolio-title"
+        content="CRTA-Lab">
+  <meta name="portfolio-description"
+        content="End-to-end compromise of the CyberWarFare CRTA lab: external foothold, internal pivot, AD takeover and NTDS extraction.">
+  <meta name="portfolio-tags"
+        content="red-team, active-directory, pivoting, privilege-escalation, golden-ticket">
+  <meta name="portfolio-thumb"
+        content="/img/RedTeam/cwl/CRTA-01.png">
+  <meta name="portfolio-source"
+        content="CyberWarFare">
+  <!-- ────────────────────────────── -->
+
+  <link rel="stylesheet" href="/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+
+  <script src="/js/script.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+  <!-- este script carrega o conteúdo em Markdown (infraestrutura igual à puppy-content.js) -->
+  <script src="/js/RedTeam/cwl/crta-content.js" defer></script>
+  <script src="/js/RedTeam/common-listing.js" defer></script>
+</head>
+
+<body class="home">
+  <div id="tsparticles"></div>
+  <header id="header-container"></header>
+
+  <!-- banner da máquina -->
+  <div class="machine-banner">
+    <img
+      src="/img/RedTeam/cwl/CRTA-01.png"
+      alt="CRTA-Lab Logo"
+    >
+  </div>
+
+  <!-- dificuldade e plataforma -->
+  <section style="text-align:center;margin-top:20px">
+    <p><strong>Difficulty:</strong> Advanced</p>
+    <p><strong>OS:</strong> Windows</p>
+    <p>
+      <a href="https://cyberwarfare.live/product/red-team-analyst-crta/"
+         target="_blank"
+         class="htb-link">🔗 Lab Portal</a>
+    </p>
+  </section>
+
+  <!-- resumo + tags (injetado por script) -->
+  <section id="RedTeam-summary"
+           style="max-width:1300px;margin:25px auto 10px;padding:0 20px;text-align:center">
+  </section>
+
+  <!-- conteúdo em Markdown -->
+  <main class="markdown-container">
+    <article id="markdown-content" class="markdown-body"></article>
+  </main>
+
+  <!-- popula o resumo e badges a partir das meta-tags -->
+  <script>
+    document.addEventListener('DOMContentLoaded',()=>{
+      const get = name => document.querySelector(`meta[name="${name}"]`)?.content || '';
+      const desc = get('portfolio-description');
+      const tags = get('portfolio-tags')
+                    .split(',').map(t=>t.trim()).filter(Boolean);
+
+      const container = document.getElementById('RedTeam-summary');
+      container.innerHTML = `
+        <p style="font-size:1rem;color:#bbb;margin-bottom:18px">
+          ${desc}
+        </p>
+        <div class="tag-list" style="justify-content:center">
+          ${tags.map(t=>`<span class="tag">${t}</span>`).join('')}
+        </div>`;
+    });
+  </script>
+</body>
+</html>

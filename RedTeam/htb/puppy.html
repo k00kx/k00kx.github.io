@@ -12,7 +12,7 @@
   <meta name="portfolio-tags"
         content="windows, active-directory, privilege-escalation, bloodhound, dpapi">
   <meta name="portfolio-thumb"
-        content="https://labs.hackthebox.com/storage/avatars/6a127b39657062e42c1a8dfdcd23475d.png">
+        content="/img/RedTeam/htb/puppy/puppy-logo.png">
   <meta name="portfolio-source"
         content="HackTheBox">
 
@@ -24,8 +24,8 @@
 
   <script src="/js/script.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
-  <script src="/js/writeups/htb/puppy-content.js" defer></script>
-  <script src="/js/writeups/common-listing.js" defer></script>
+  <script src="/js/RedTeam/htb/puppy-content.js" defer></script>
+  <script src="/js/RedTeam/common-listing.js" defer></script>
 </head>
 
 <body class="home">
@@ -33,7 +33,7 @@
   <header id="header-container"></header>
 
   <div class="machine-banner">
-    <img src="https://labs.hackthebox.com/storage/avatars/6a127b39657062e42c1a8dfdcd23475d.png"
+    <img src="/img/RedTeam/htb/puppy/puppy-logo.png"
          alt="Puppy HTB Logo">
   </div>
 
@@ -45,7 +45,7 @@
           class="htb-link">🔗 Link to HTB</a></p>
   </section>
 
-  <section id="writeup-summary"
+  <section id="RedTeam-summary"
            style="max-width:1300px;margin:25px auto 10px;padding:0 20px;text-align:center"></section>
 
   <main class="markdown-container">
@@ -60,7 +60,7 @@
     const tags = get('portfolio-tags')
                  .split(',').map(t => t.trim()).filter(Boolean);
 
-    const container = document.getElementById('writeup-summary');
+    const container = document.getElementById('RedTeam-summary');
     container.innerHTML = `
       <p style="font-size:1rem;color:#bbb;margin-bottom:18px">
         ${desc}

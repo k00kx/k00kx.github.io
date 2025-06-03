@@ -143,7 +143,7 @@ With a list of users gathered, the next logical step was to investigate group me
 After running<code>ldapdomaindump</code><span class="codefix">,</span> we inspected the generated<code>domain_users.html</code> report to get a better view of the domain landscape. Beyond the usual suspects like<code>Administrator</code><span class="codefix">,</span><code>Guest</code><span class="codefix">,</span> and<code>krbtgt</code><span class="codefix">,</span> several user accounts stood out — notably<code>jamie.williams</code><span class="codefix">,</span><code>adam.silver</code><span class="codefix">,</span> and<code>ant.edwards</code><span class="codefix">,</span> all members of the <span class="blue">DEVELOPERS</span> group. Meanwhile,<code>levi.james</code><span class="codefix">,</span> our current session, is sitting comfortably in <span class="blue">HR</span>. Not quite the crew you'd expect to be pushing code — but maybe that can change.
 </p>
 <div style="margin-top: 20px;">
-  <img src="/img/writeups/htb/puppy/ldap-domain-users.png" alt="LDAP Dump Table" style="width: 100%; max-width: 100%; border: 1px solid #444; border-radius: 4px;" />
+  <img src="/img/RedTeam/htb/puppy/ldap-domain-users.png" alt="LDAP Dump Table" style="width: 100%; max-width: 100%; border: 1px solid #444; border-radius: 4px;" />
 </div>
 
 ### 🧾 BloodHound ACL Analysis
@@ -181,14 +181,14 @@ To gain visibility into how our current user fits into the Active Directory envi
 </p>
 
 <p class="indent-paragraph">
-  <img src="/img/writeups/htb/puppy/graph_levi_puppy_htb.png" alt="BloodHound graph for levi.james" style="width:100%; border-radius:6px; margin-top: 1em;" />
+  <img src="/img/RedTeam/htb/puppy/graph_levi_puppy_htb.png" alt="BloodHound graph for levi.james" style="width:100%; border-radius:6px; margin-top: 1em;" />
 </p>
 
 <p class="indent-paragraph">
 As seen earlier in the user dump, <span class="blue">levi.james</span> is part of the <span class="blue">HR</span> group which neatly explains why access to the <span class="blue">DEV</span> share didn’t go through. It’s not about broken permissions; Levi just wasn’t on the guest list. But instead of giving up, we turned to BloodHound to see if there was another way in. Using the query<code>MATCH (n:Group {name: 'DEVELOPERS@PUPPY.HTB'}) RETURN n</code><span class="codefix">,</span> we locked onto the target group and followed <em>“Shortest Paths to Here”</em>. The results were promising: our session,<code>levi.james@puppy.htb</code><span class="codefix">,</span> has a <span class="highlight-red">GenericWrite</span> edge on the <span class="blue">DEVELOPERS</span> group, a delegated permission that allows modification of group attributes. In short, Levi’s not a dev yet, but he has just enough power to make himself one.
 </p>
 
-<img src="/img/writeups/htb/puppy/graph_dev_puppy_htb.png" class="full-width-img" alt="BloodHound GenericWrite to Developers group"/>
+<img src="/img/RedTeam/htb/puppy/graph_dev_puppy_htb.png" class="full-width-img" alt="BloodHound GenericWrite to Developers group"/>
 
 <p class="indent-paragraph">
 With <span class="blue">levi.james</span> holding <span class="highlight-red">GenericWrite</span> over the <span class="blue">DEVELOPERS</span> group, the next step was to retrieve his full Distinguished Name (DN), required for direct LDAP modifications. Using <code>ldapsearch</code> with appropriate filters, we extracted only the necessary DN value: <code>CN=Levi B. James,OU=MANPOWER,DC=PUPPY,DC=HTB</code><span class="codefix">.</span> This identifier would later be used to update group memberships.
@@ -303,7 +303,7 @@ https://github.com/r3nt0n/keepass4brute
 The CLI hit a wall, but the GUI picked up where it left off. With the recovered<code>liverpool</code> password, we launched<code>recovery.kdbx</code> and finally gained visual access to the database. Inside, we found five familiar names tied to domain accounts, each entry hiding a potential credential behind masked fields. With a few clicks, the passwords were revealed:<code>HJKL2025!</code><span class="codefix">,</span><code>Antman2025!</code><span class="codefix">,</span><code>JamieLove2025!</code><span class="codefix">,</span><code>ILY2025!</code><span class="codefix">,</span> and<code>Steve2025!</code><span class="codefix">.</span> 
 </p>
 
-<img src="/img/writeups/htb/puppy/keepass_recovery-kdbx.png" class="full-width-img" alt="recovery.kdbx"/>
+<img src="/img/RedTeam/htb/puppy/keepass_recovery-kdbx.png" class="full-width-img" alt="recovery.kdbx"/>
 
 <p class="indent-paragraph">
 With a fresh batch of credentials in hand (usernames from our earlier RID brute-force and passwords extracted from the cracked KeePass database) it was time to test for valid logins. Feeding both lists into <code>netexec</code> allowed us to iterate through potential combinations efficiently. The result? A clean hit: <span class="blue">PUPPY.HTB\\ant.edwards:Antman2025!</span>. No domain admin logins, yet, but this set was definitely worth validating across the environment.
@@ -351,7 +351,7 @@ INFO: Done in 00M 29S
 To explore the extent of <span class="blue">ant.edwards</span>'s influence within the domain, we ran a broader query to uncover any shortest privilege paths linking him to other user objects. Using<code>MATCH (n:User {name: 'ANT.EDWARDS@PUPPY.HTB'}), (m:User) WHERE n &lt; &gt; m WITH n, m MATCH p = shortestPath((n)-[*..4]-&gt;(m)) RETURN p</code><span class="codefix">,</span> we visualized the privilege graph around his account. The resulting BloodHound path revealed a particularly notable relationship: <span class="blue">ant.edwards</span> is a member of the<code>SENIOR DEVS</code> group, which holds <span class="highlight-red">GenericAll</span> permissions over <span class="blue">adam.silver</span>.</span> This means Edwards can reset Adam’s password or make any modification to his account — a promising vector for lateral movement.
 </p>
 
-<img src="/img/writeups/htb/puppy/graph_objects_ant-edwards.png" alt="BloodHound showing SENIOR DEVS GenericAll over Adam Silver">
+<img src="/img/RedTeam/htb/puppy/graph_objects_ant-edwards.png" alt="BloodHound showing SENIOR DEVS GenericAll over Adam Silver">
 
 ### 🎯 Abusing GenericAll to Reset a Password
 

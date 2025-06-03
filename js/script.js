@@ -8,7 +8,7 @@ const getRandomUsername = () => usernames[r(0,usernames.length)];
 
 function getCurrentDirectory(){
   const parts = location.pathname.split("/").filter(Boolean);
-  const idx   = parts.indexOf("writeups");
+  const idx   = parts.indexOf("RedTeam");
   if (idx !== -1) return parts.slice(idx).map(p=>p.replace(".html","")).join("/");
   const file  = parts.pop() || "Desktop.html";
   return file.replace(".html","") || "Desktop";
@@ -37,29 +37,29 @@ function renderHeader(){
 
       <nav class="nav-links">
         <div class="dropdown">
-          <button class="dropbtn">Writeups</button>
+          <button class="dropbtn">RedTeam</button>
           <div class="dropdown-content">
 
             <!-- HackTheBox block -->
             <div class="submenu">
-              <a href="/writeups/htb/htb.html" class="submenu-label">HackTheBox</a>
+              <a href="/RedTeam/htb/htb.html" class="submenu-label">HackTheBox</a>
               <div class="links">
-                <a href="/writeups/htb/puppy.html">Puppy</a>
-                <a href="/writeups/htb/fluffy.html">Fluffy</a>
+                <a href="/RedTeam/htb/puppy.html">Puppy</a>
+                <a href="/RedTeam/htb/fluffy.html">Fluffy</a>
               </div>
             </div>
 
             <!-- TryHackMe block -->
             <div class="submenu">
-              <a href="/writeups/thm/thm.html" class="submenu-label">TryHackMe</a>
+              <a href="/RedTeam/thm/thm.html" class="submenu-label">TryHackMe</a>
               <div class="links" id="thm-links"></div>
             </div>
 
                         <!-- CyberWarLab -->
             <div class="submenu">
-              <a href="/writeups/cwl/cwl.html" class="submenu-label">CyberWarFare</a>
+              <a href="/RedTeam/cwl/cwl.html" class="submenu-label">CyberWarFare</a>
             <div class="links">
-              <a href="/writeups/cwl/crta-lab.html">CRTA-Lab</a>
+              <a href="/RedTeam/cwl/crta-lab.html">CRTA-Lab</a>
             </div>
             </div>
 
