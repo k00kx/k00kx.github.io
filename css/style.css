@@ -75,7 +75,7 @@ main.portfolio-area{max-width:1300px;margin:60px auto 80px;padding:0 20px}
 .tool-card .card-body{padding:16px 18px 22px}
 .tool-card h3{font-size:1.05rem;color:#339CFF;margin:0 0 8px;text-align:center}
 .tool-card p{font-size:.85rem;color:#bbb;margin:0 0 12px;min-height:52px}
-.tag-list{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.tag-list{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-content:center}
 .tag{background:#222;color:#a3ffb0;font-size:.7rem;padding:3px 8px;border-radius:6px}
 
 .badge{
