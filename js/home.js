@@ -1,15 +1,7 @@
-/*  home.js  ─────────────────────────────────────────────────────────────
-    1. Collect every write-up link that appears inside the menu.
-    2. Fetch each page, read its <meta name="portfolio-*> tags and
-       build a card only if those tags exist.
-    3. Shuffle the list + live-search.
-------------------------------------------------------------------------*/
-
 (() => {
 
-  const DEFAULT_THUMB = '/assets/walking.gif';       // fallback image
+  const DEFAULT_THUMB = '/assets/walking.gif';       
 
-  /* Fisher-Yates shuffle ------------------------------------------------*/
   const shuffle = arr => {
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -18,7 +10,6 @@
     return arr;
   };
 
-  /* Card factory --------------------------------------------------------*/
   const createCard = item => {
     const a = document.createElement('a');
     a.href      = item.url;
@@ -54,7 +45,7 @@
       if (!source) {
         const seg  = url.split('/').filter(Boolean)[1] || '';
         const map  = { htb:'HackTheBox', thm:'TryHackMe',
-                       pg:'PortSwigger', cw:'CyberWarFare' };
+                       pg:'PortSwigger', cwl:'CyberWarFare' };
         source = map[seg] || '';
       }
 

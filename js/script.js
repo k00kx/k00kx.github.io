@@ -55,6 +55,14 @@ function renderHeader(){
               <div class="links" id="thm-links"></div>
             </div>
 
+                        <!-- CyberWarLab -->
+            <div class="submenu">
+              <a href="/writeups/cwl/cwl.html" class="submenu-label">CyberWarFare</a>
+            <div class="links">
+              <a href="/writeups/cwl/crta-lab.html">CRTA-Lab</a>
+            </div>
+            </div>
+
           </div>
         </div>
       </nav>
