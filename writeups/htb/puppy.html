@@ -1,37 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Puppy</title>
+
+  <meta name="portfolio-title"
+        content="Puppy">
+  <meta name="portfolio-description"
+        content="Full Active-Directory compromise, DPAPI abuse and privilege escalation on Windows Server 2022.">
+  <meta name="portfolio-tags"
+        content="windows, active-directory, privilege-escalation, bloodhound, dpapi">
+  <meta name="portfolio-thumb"
+        content="https://labs.hackthebox.com/storage/avatars/6a127b39657062e42c1a8dfdcd23475d.png">
+  <meta name="portfolio-source"
+        content="HackTheBox">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css" />
+
   <script src="/js/script.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
-  <script src="/js/writeups/puppy-content.js" defer></script>
+  <script src="/js/writeups/htb/puppy-content.js" defer></script>
 </head>
-<body class="home">
 
+<body class="home">
   <div id="tsparticles"></div>
   <header id="header-container"></header>
 
   <div class="machine-banner">
-    <img src="https://labs.hackthebox.com/storage/avatars/6a127b39657062e42c1a8dfdcd23475d.png" alt="Puppy HTB Logo">
+    <img src="https://labs.hackthebox.com/storage/avatars/6a127b39657062e42c1a8dfdcd23475d.png"
+         alt="Puppy HTB Logo">
   </div>
 
   <section style="text-align:center;margin-top:20px">
     <p><strong>Difficulty:</strong> Medium</p>
     <p><strong>OS:</strong> Windows</p>
-    <p><a href="https://www.hackthebox.com/machines/puppy" target="_blank" class="htb-link">🔗 Link to HTB</a></p>
+    <p><a href="https://www.hackthebox.com/machines/puppy"
+          target="_blank"
+          class="htb-link">🔗 Link to HTB</a></p>
   </section>
+
+  <section id="writeup-summary"
+           style="max-width:1300px;margin:25px auto 10px;padding:0 20px;text-align:center"></section>
 
   <main class="markdown-container">
     <article id="markdown-content" class="markdown-body"></article>
   </main>
 
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const get = name => document.querySelector(`meta[name="${name}"]`)?.content || '';
+
+    const desc = get('portfolio-description');
+    const tags = get('portfolio-tags')
+                 .split(',').map(t => t.trim()).filter(Boolean);
+
+    const container = document.getElementById('writeup-summary');
+    container.innerHTML = `
+      <p style="font-size:1rem;color:#bbb;margin-bottom:18px">
+        ${desc}
+      </p>
+      <div class="tag-list" style="justify-content:center">
+        ${tags.map(t => `<span class="tag">${t}</span>`).join('')}
+      </div>`;
+  });
+  </script>
 </body>
 </html>

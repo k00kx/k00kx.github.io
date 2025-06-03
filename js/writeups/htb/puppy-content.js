@@ -1,5 +1,3 @@
-/*  <--  coloque aqui exatamente o bloco const markdown = `...` que você já
-         tinha dentro do <script> da antiga puppy.html                     */
     const markdown = `
 <p class="indent-paragraph">
 This write-up concludes the full compromise of the<code>Puppy</code> machine from Hack The Box's Season 8. From initial enumeration and post-exploitation to domain takeover and final flag retrieval, this assessment demonstrated realistic Active Directory attack chains, including credential harvesting, DPAPI abuse, privilege escalation, and NTDS extraction.
@@ -737,7 +735,6 @@ This final technique showcases a critical risk in Active Directory environments 
 document.addEventListener("DOMContentLoaded",()=>{ 
   document.getElementById("markdown-content").innerHTML = marked.parse(markdown);
 
-  /* colorir linhas que começam com ~$ ------------------------------------*/
   document.querySelectorAll('pre code').forEach(block=>{
     block.innerHTML=block.innerHTML.split('\n').map(l=>{
       return l.trimStart().startsWith('~$')
