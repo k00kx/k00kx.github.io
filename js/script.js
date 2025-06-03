@@ -31,8 +31,8 @@ function renderHeader(){
   document.getElementById("header-container").innerHTML = `
     <div class="terminal-header">
       <div class="terminal-line">
-        <span class="red">root</span><span class="skull">${skullSymbol}</span>
-        <span id="username" class="blue">${user}</span> <span id="directory-path">${prompt}</span>
+        <span class="red">root</span><span class="skull">${skullSymbol}</span><span id="username" class="blue">${user}</span>
+         <span id="directory-path">${prompt}</span>
       </div>
 
       <nav class="nav-links">
