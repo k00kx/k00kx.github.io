@@ -45,36 +45,49 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
 
-    const parts  = location.pathname.split('/').filter(Boolean);  
+    const parts  = location.pathname.split('/').filter(Boolean);
     const catDir = (parts.length >= 2 ? parts[1] : '').toLowerCase();
 
-    const srcMap = { htb: 'hackthebox', thm: 'tryhackme', cwl: 'cyberwarfare' };
-    const expectedSource = srcMap[catDir] || '';
+   
+    let links;
+    if (catDir === 'labs') {
+      links = [
+        '/RedTeam/htb/puppy.html',
+        '/RedTeam/htb/fluffy.html',
+        '/RedTeam/cwl/crta-lab.html'
+        // Adicione aqui quaisquer outras páginas .html que pertençam a RedTeam
+      ];
+    }
 
-    const links = Array.from(
-      document.querySelectorAll('.nav-links .dropdown-content a[href$=".html"]')
-    ).map(a => a.getAttribute('href'));
+    else {
+      links = Array.from(
+        document.querySelectorAll('.nav-links .dropdown-content a[href$=".html"]')
+      ).map(a => a.getAttribute('href'));
+    }
 
     const items = await Promise.all(links.map(readMeta));
 
+    const srcMap = { htb: 'hackthebox', thm: 'tryhackme', cwl: 'cyberwarfare' };
+    const expectedSource = srcMap[catDir] || '';
     const norm = s => s.toLowerCase().replace(/\s+/g,'');
     const slice = expectedSource
       ? items.filter(it => norm(it.source) === expectedSource)
-      : items;                      
+      : items;
 
     $('#search-box-wrapper').style.display = 'block';
+
     const initialList = shuffle(slice);
     render(initialList);
 
     $('#searchBox').addEventListener('input', e => {
       const q = e.target.value.trim().toLowerCase();
-      const match = initialList.filter(it =>
+      const filtered = initialList.filter(it =>
         it.title.toLowerCase().includes(q)       ||
         it.description.toLowerCase().includes(q) ||
         it.tags.some(t => t.toLowerCase().includes(q)) ||
         it.source.toLowerCase().includes(q)
       );
-      render(match);
+      render(filtered);
     });
   });
 
