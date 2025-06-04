@@ -13,7 +13,7 @@ body{
 #directory-path{font-weight:bold}
 .separator{margin:6px auto;border:none;border-top:1px solid #555;width:80%}
 
-.nav-links{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:4px}
+.nav-links{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top: 30px;}
 .dropdown{position:relative}
 
 .dropbtn{
@@ -88,4 +88,13 @@ main.portfolio-area{max-width:1300px;margin:60px auto 80px;padding:0 20px}
   padding:4px 10px;
   border-radius:999px;
   pointer-events:none;
+}
+
+.blinker {
+  display: inline-block;
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
 }
