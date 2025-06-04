@@ -64,10 +64,8 @@ function renderHeader() {
       </div>
 
       <nav class="nav-links">
-        <!-- 1) Home (antes era <a>, agora é <button>) -->
         <button class="dropbtn" onclick="location.href='/index.html'">Home</button>
 
-        <!-- 2) Whoami -->
         <button class="dropbtn" onclick="location.href='/whoami.html'">Whoami</button>
 
         <!-- 3) RedTeam (continuamos usando dropdown normal) -->
@@ -94,17 +92,13 @@ function renderHeader() {
           </div>
         </div>
 
-        <!-- 4) Forensic -->
-        <button class="dropbtn" onclick="location.href='/forensic.html'">Forensic</button>
-
-        <!-- 5) Intelligence -->
-        <button class="dropbtn" onclick="location.href='/intelligence.html'">Intelligence</button>
+        <!-- <button class="dropbtn" onclick="location.href='/forensic.html'">Forensic</button> -->
+        <!-- <button class="dropbtn" onclick="location.href='/intelligence.html'">Intelligence</button> -->
       </nav>
 
       <hr class="separator">
     </div>`;
 
-  // (restante do toggle dos dropdowns e animação do usuário permanece igual)
   document.querySelectorAll(".dropdown").forEach(dropdown => {
     const dropBtn = dropdown.querySelector(".dropbtn");
     dropBtn.addEventListener("click", e => {
