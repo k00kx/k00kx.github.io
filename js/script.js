@@ -77,15 +77,6 @@ function renderHeader() {
               <div class="links">
                 <a href="/RedTeam/htb/puppy.html">Puppy</a>
                 <a href="/RedTeam/htb/fluffy.html">Fluffy</a>
-              </div>
-            </div>
-            <div class="submenu">
-              <a href="/RedTeam/thm/thm.html" class="submenu-label">TryHackMe</a>
-              <div class="links" id="thm-links"></div>
-            </div>
-            <div class="submenu">
-              <a href="/RedTeam/cwl/cwl.html" class="submenu-label">CyberWarFare</a>
-              <div class="links">
                 <a href="/RedTeam/cwl/crta-lab.html">CRTA-Lab</a>
               </div>
             </div>
