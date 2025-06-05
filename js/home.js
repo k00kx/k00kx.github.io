@@ -1,6 +1,6 @@
 (() => {
 
-  const DEFAULT_THUMB = '/assets/walking.gif';       
+  const DEFAULT_THUMB = '/img/ui/walking.gif';
 
   const shuffle = arr => {
     for (let i = arr.length - 1; i > 0; i--) {
@@ -31,7 +31,7 @@
   const fetchMeta = async url => {
     try {
       const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) return null;                            
+      if (!res.ok) return null;
 
       const html = await res.text();
       const doc  = new DOMParser().parseFromString(html, 'text/html');
@@ -39,7 +39,7 @@
                             ?.content.trim() || '';
 
       const title = get('portfolio-title');
-      if (!title) return null;                            
+      if (!title) return null;
 
       let source = get('portfolio-source');
       if (!source) {
@@ -79,11 +79,15 @@
       document.querySelectorAll('.nav-links .links a[href$=".html"]')
     ).map(a => a.getAttribute('href'));
 
-    const raw    = await Promise.all(links.map(fetchMeta));
-    const items  = raw.filter(Boolean);        
+    const raw   = await Promise.all(links.map(fetchMeta));
+    const items = raw.filter(Boolean);
 
-    const data   = shuffle(items);
-    render(data);
+    // Embaralha todos os itens
+    const data = shuffle(items);
+
+    // Mostra apenas 4 cards na home
+    const initialFour = data.slice(0, Math.min(4, data.length));
+    render(initialFour);
 
     const search = document.getElementById('searchBox');
     search.addEventListener('input', e => {
@@ -94,7 +98,9 @@
         itm.tags.some(t => t.toLowerCase().includes(q)) ||
         itm.source.toLowerCase().includes(q)
       );
-      render(filtered);
+
+      // Ao buscar, exibe no máximo 4 resultados
+      render(filtered.slice(0, Math.min(4, filtered.length)));
     });
   });
 

@@ -73,11 +73,15 @@ function renderHeader() {
           <button class="dropbtn">RedTeam</button>
           <div class="dropdown-content">
             <div class="submenu">
-              <a href="/RedTeam/labs/labs.html" class="submenu-label">Labs</a>
+              <a href="/RedTeam/labs.html" class="submenu-label">Labs</a>
               <div class="links">
                 <a href="/RedTeam/htb/puppy.html">Puppy</a>
                 <a href="/RedTeam/htb/fluffy.html">Fluffy</a>
                 <a href="/RedTeam/cwl/crta-lab.html">CRTA-Lab</a>
+                <a href="/RedTeam/thm/overpass.html">Overpass</a>
+                <a href="/RedTeam/thm/blue.html">Blue</a>
+                <a href="/RedTeam/thm/kenobi.html">Kenobi</a>
+                <a href="/RedTeam/thm/vulnversity.html">Vulnversity</a>
               </div>
             </div>
           </div>
