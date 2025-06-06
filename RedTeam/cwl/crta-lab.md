@@ -1,4 +1,3 @@
-    const markdown = `
 <p class="indent-paragraph">
 The primary objective of this Red Team Operation is to assess the security posture of the enterprise environment. The engagement aims to identify vulnerabilities, and misconfigurations in the AD environment and provide actionable recommendations for enhancing the security of the infrastructure.
 </p>
@@ -48,14 +47,14 @@ The scope for this assessment includes remote access via VPN and the following I
 Reconnaissance began by identifying the external and internal IP ranges provided in the lab scope: <code>192.168.80.0/24</code> and <code>192.168.98.0/24</code><span class="codefix">.</span> These subnets typically host infrastructure components such as perimeter services, internal servers, and domain resources. Notably, <code>192.168.80.1</code> and <code>192.168.98.1</code> were explicitly excluded from testing, as they fall outside the authorized engagement scope. With these constraints in place, enumeration efforts proceeded by scanning only the permitted ranges to identify reachable hosts and map the initial attack surface.
 </p>
 
-\`\`\`
+```
 ~$ nmap -sn 192.168.80.2-254
 
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-04-17 14:14 MDT
 Nmap scan report for 192.168.80.10
 Host is up (0.17s latency).
 Nmap done: 253 IP addresses (1 host up) scanned in 12.42 seconds
-\`\`\`
+```
 
 <p class="indent-paragraph">
 After identifying <code>192.168.80.10</code> as the only live host in the external network, I proceeded with a service enumeration scan to identify running applications and gather version information. The scan utilized the flags <code>-sC</code> for default NSE scripts, <code>-sV</code> for service and version detection, <code>-p-</code> to cover all 65535 TCP ports, and <code>-T4</code> to increase speed without being overly aggressive.
@@ -64,7 +63,7 @@ After identifying <code>192.168.80.10</code> as the only live host in the extern
 This enumeration phase lays the groundwork for deeper analysis. The next steps involve interacting with the HTTP service to inspect its structure, discover hidden paths, and potentially identify input vectors for exploitation.
 </p>
 
-\`\`\`
+```
 ~$ nmap -sC -sV -p- -T4 192.168.80.10 2>/dev/null
 
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-04-17 14:33 MDT
@@ -85,17 +84,17 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 Nmap done: 1 IP address (1 host up) scanned in 754.45 seconds
-\`\`\`
+```
 
 <p class="indent-paragraph">
 To simplify interaction and avoid typing the raw IP address each time, I mapped the target IP address <code>192.168.80.10</code> to a hostname using the local resolver configuration.
 </p>
 
-\`\`\`
+```
 ~$ sudo nano /etc/hosts
 
 192.168.80.10 ecommerce.lab
-\`\`\`
+```
 
 <p class="indent-paragraph">
 Navigating to <code>ecommerce.lab</code> revealed a login portal for a platform titled <code>Cyberwarops E-commerce</code><span class="codefix">.</span> This login page appears to be part of a custom-developed web application branded as CyberWarFare Labs, which aligns with the http-title identified during the Nmap scan. While analyzing the login page I noticed a link labeled “Sign Up”, located below the login form. Clicking on this link led to the user registration endpoint<code>
@@ -123,16 +122,4 @@ The presence of raw <code>&lt;script&gt;</code> output indicates that the server
 
 ### 🔐 Remote Shell Access via SSH
 
-
 </div>
-    `;
-document.addEventListener("DOMContentLoaded",()=>{ 
-  document.getElementById("markdown-content").innerHTML = marked.parse(markdown);
-
-  document.querySelectorAll('pre code').forEach(block=>{
-    block.innerHTML=block.innerHTML.split('\n').map(l=>{
-      return l.trimStart().startsWith('~$')
-        ? `<span style="color:#FFD700;font-weight:bold;">${l}</span>` : l;
-    }).join('\n');
-  });
-});

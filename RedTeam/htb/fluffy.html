@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Fluffy</title>
 
+  <!-- Metadados para gerar o card automaticamente (common-listing.js) -->
   <meta name="portfolio-title"
         content="Fluffy">
   <meta name="portfolio-description"
@@ -13,18 +14,96 @@
         content="windows, smb, privilege-escalation">
   <meta name="portfolio-thumb"
         content="/img/RedTeam/htb/fluffy/fluffy-logo.png">
-    <meta name="portfolio-source"
+  <meta name="portfolio-source"
         content="HackTheBox">
 
+  <!-- Fonte e CSS principal -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
-
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
+
+  <!-- Script do menu/particles (permanece inalterado) -->
   <script src="/js/script.js" defer></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
-  <script src="/js/RedTeam/htb/fluffy-content.js" defer></script>
+  <!-- Biblioteca markdown-it via CDN -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"
+    defer></script>
+
+  <!--
+    Script interno que:
+      1) Injeta descrição + tags em #RedTeam-summary
+      2) Faz fetch de fluffy.md, converte para HTML e injeta em #markdown-content
+      3) Destaca em amarelo linhas começando com "~$"
+  -->
+  <script defer>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Função utilitária para ler <meta name="…">
+      const getMeta = name => {
+        const el = document.querySelector(`meta[name="${name}"]`);
+        return el ? el.content.trim() : '';
+      };
+
+      // Injeta resumo (descrição + tags) em #RedTeam-summary
+      const description = getMeta('portfolio-description');
+      const tags        = getMeta('portfolio-tags')
+                         .split(',')
+                         .map(t => t.trim())
+                         .filter(Boolean);
+
+      const summaryContainer = document.getElementById('RedTeam-summary');
+      summaryContainer.innerHTML = `
+        <p style="font-size:1rem;color:#bbb;margin-bottom:18px">
+          ${description}
+        </p>
+        <div class="tag-list" style="justify-content:center">
+          ${tags.map(t => `<span class="tag">${t}</span>`).join('')}
+        </div>
+      `;
+
+      // Faz fetch do fluffy.md (mesma pasta que fluffy.html)
+      try {
+        const resp = await fetch('fluffy.md', { cache: 'no-cache' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const mdText = await resp.text();
+
+        // Inicializa markdown-it e converte
+        const md = window.markdownit({
+          html: true,
+          linkify: true,
+          typographer: true
+        });
+        const renderedHTML = md.render(mdText);
+
+        // Injeta o HTML convertido em #markdown-content
+        document.getElementById('markdown-content').innerHTML = renderedHTML;
+
+        // Destaca em amarelo linhas que começam com "~$" dentro de <pre><code>
+        document.querySelectorAll('.markdown-body pre code').forEach(block => {
+          block.innerHTML = block.innerHTML
+            .split('\n')
+            .map(line =>
+              line.trimStart().startsWith('~$')
+                ? `<span style="color:#FFD700;font-weight:bold;">${line}</span>`
+                : line
+            )
+            .join('\n');
+        });
+      }
+      catch (err) {
+        console.error('Erro ao carregar Markdown:', err);
+        document.getElementById('markdown-content').innerHTML = `
+          <p style="color:red; text-align:center">
+            Falha ao carregar conteúdo Markdown.<br>
+            (${err.message})
+          </p>
+        `;
+      }
+    });
+  </script>
 </head>
 
 <body class="home">
@@ -32,24 +111,34 @@
   <header id="header-container"></header>
 
   <div class="machine-banner">
-    <img src="/img/RedTeam/htb/fluffy/fluffy-logo.png"
-         alt="Fluffy HTB Logo">
+    <img
+      src="/img/RedTeam/htb/fluffy/fluffy-logo.png"
+      alt="Fluffy HTB Logo">
   </div>
 
   <section style="text-align:center;margin-top:20px">
     <p><strong>Difficulty:</strong> Easy</p>
     <p><strong>OS:</strong> Windows</p>
     <p>
-      <a href="https://www.hackthebox.com/machines/fluffy"
-         target="_blank"
-         class="htb-link">🔗 Link to HTB</a>
+      <a
+        href="https://www.hackthebox.com/machines/fluffy"
+        target="_blank"
+        class="htb-link">🔗 Link to HTB</a>
     </p>
   </section>
 
-  <section id="meta-summary" class="markdown-container" style="margin-top:25px"></section>
+  <!-- Onde o resumo (descrição + tags) será injetado dinamicamente -->
+  <section
+    id="RedTeam-summary"
+    class="markdown-container"
+    style="margin-top:25px">
+  </section>
 
   <main class="markdown-container">
-    <article id="markdown-content" class="markdown-body"></article>
+    <!-- Aqui entra o HTML convertido do fluffy.md -->
+    <article
+      id="markdown-content"
+      class="markdown-body"></article>
   </main>
 </body>
 </html>

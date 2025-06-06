@@ -15,7 +15,7 @@ function getCurrentDirectory() {
       .map(p => p.replace(".html", ""))
       .join("/");
   }
-  const file = parts.pop() || "index.html";
+  const file = parts.pop() || "home.html";
   const name = file.replace(".html", "");
   return name === "index" || name === "" ? "Home" : name;
 }
@@ -64,7 +64,7 @@ function renderHeader() {
       </div>
 
       <nav class="nav-links">
-        <button class="dropbtn" onclick="location.href='/index.html'">Home</button>
+        <button class="dropbtn" onclick="location.href='/home.html'">Home</button>
 
         <button class="dropbtn" onclick="location.href='/whoami.html'">Whoami</button>
 
