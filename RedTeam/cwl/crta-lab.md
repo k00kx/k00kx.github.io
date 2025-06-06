@@ -7,7 +7,7 @@ Below is the achievement badge earned upon completing this machine, validating t
 </p><br>
 
 <div style="text-align: center; margin-top: 1em;">
-  <a href="https://labs.cyberwarfare.live/badge/image/681fb675696368ff56f09813" target="_blank" style="text-decoration: none; font-family: monospace; background: #0f0f0f; color: #00bfff; padding: 6px 12px; border: 1px solid #00bfff; border-radius: 6px; display: inline-block;">View CRTA Practise Lab Badge</a>
+  <a href="https://labs.cyberwarfare.live/badge/image/681fb675696368ff56f09813" target="_blank" style="text-decoration: none; font-family: monospace; background: #0f0f0f; color: #00bfff; padding: 6px 12px; border: 1px solid #00bfff; border-radius: 6px; display: inline-block;">CRTA Practise Lab Badge</a>
 </div><br>
 
 ---

@@ -76,7 +76,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     const parts    = location.pathname.split('/').filter(Boolean);
     const lastPart = parts.length ? parts[parts.length - 1].toLowerCase() : '';
-    const isIndex  = lastPart === '' || lastPart === 'home.html';
+    const isIndex  = lastPart === '' || lastPart === 'index.html';
     const isLabs   = lastPart === 'labs.html';
 
     // 1) BUSCA TODOS os <a> dentro de ".nav-links" cujo href:
