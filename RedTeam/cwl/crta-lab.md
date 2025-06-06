@@ -101,14 +101,14 @@ Navigating to <code>ecommerce.lab</code> revealed a login portal for a platform 
 http://ecommerce.lab/registration.php</code><span class="codefix">.</span>
 </p>
 <p class="indent-paragraph">
-  <img src="/img/RedTeam/cwl/crta-http-login.png" alt="login page cyberwarcops" style="width:100%; border-radius:6px; margin-top: 1em;" />
+  <img src="/img/redteam/cwl/crta-http-login.png" alt="login page cyberwarcops" style="width:100%; border-radius:6px; margin-top: 1em;" />
 </p>
 
 <p class="indent-paragraph">
 While navigating through the authenticated area of the application <code>http://ecommerce.lab/dashboard1.php</code><span class="codefix">,</span> I discovered a newsletter subscription field that accepted an email address as input. Submitting the form triggered the following behavior: <code>alert("Thanks for subcribing ..!")</code><span class="codefix">.</span>
 </p>
 <p class="indent-paragraph">
-  <img src="/img/RedTeam/cwl/crta-newsletter-email.png" alt="Thanks for subcribing" style="width:100%; border-radius:6px; margin-top: 1em;" />
+  <img src="/img/redteam/cwl/crta-newsletter-email.png" alt="Thanks for subcribing" style="width:100%; border-radius:6px; margin-top: 1em;" />
 </p>
 
 ### 🧨 Command Injection via Email Parameter
@@ -117,7 +117,7 @@ While navigating through the authenticated area of the application <code>http://
 The presence of raw <code>&lt;script&gt;</code> output indicates that the server is dynamically generating JavaScript based on user interaction. This strongly indicates that the value of the <code>EMAIL</code> parameter is being executed by the underlying system shell, without proper input validation or sanitization. To validate the injection point, a crafted POST request was sent with <code>EMAIL=cat /etc/passwd</code>, resulting in the disclosure of the system's <code>/etc/passwd</code> file. This confirms the presence of unauthenticated command injection.
 </p>
 <p class="indent-paragraph">
-  <img src="/img/RedTeam/cwl/crta-command-injection-email.png" alt="Command Injection via Email Parameter" style="width:100%; border-radius:6px; margin-top: 1em;" />
+  <img src="/img/redteam/cwl/crta-command-injection-email.png" alt="Command Injection via Email Parameter" style="width:100%; border-radius:6px; margin-top: 1em;" />
 </p>
 
 ### 🔐 Remote Shell Access via SSH

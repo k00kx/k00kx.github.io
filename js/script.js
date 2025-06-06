@@ -8,7 +8,7 @@ const getRandomUsername = () => usernames[r(0, usernames.length)];
 
 function getCurrentDirectory() {
   const parts = location.pathname.split("/").filter(Boolean);
-  const idx = parts.indexOf("RedTeam");
+  const idx = parts.indexOf("redteam");
   if (idx !== -1) {
     return parts
       .slice(idx)
@@ -68,20 +68,20 @@ function renderHeader() {
 
         <button class="dropbtn" onclick="location.href='/whoami.html'">Whoami</button>
 
-        <!-- 3) RedTeam (continuamos usando dropdown normal) -->
+        <!-- 3) redteam (continuamos usando dropdown normal) -->
         <div class="dropdown">
           <button class="dropbtn">RedTeam</button>
           <div class="dropdown-content">
             <div class="submenu">
-              <a href="/RedTeam/labs.html" class="submenu-label">Labs</a>
+              <a href="/redteam/labs.html" class="submenu-label">Labs</a>
               <div class="links">
-                <a href="/RedTeam/htb/puppy.html">Puppy</a>
-                <a href="/RedTeam/htb/fluffy.html">Fluffy</a>
-                <a href="/RedTeam/cwl/crta-lab.html">CRTA-Lab</a>
-                <a href="/RedTeam/thm/overpass.html">Overpass</a>
-                <a href="/RedTeam/thm/blue.html">Blue</a>
-                <a href="/RedTeam/thm/kenobi.html">Kenobi</a>
-                <a href="/RedTeam/thm/vulnversity.html">Vulnversity</a>
+                <a href="/redteam/htb/puppy.html">Puppy</a>
+                <a href="/redteam/htb/fluffy.html">Fluffy</a>
+                <a href="/redteam/cwl/crta-lab.html">CRTA-Lab</a>
+                <a href="/redteam/thm/overpass.html">Overpass</a>
+                <a href="/redteam/thm/blue.html">Blue</a>
+                <a href="/redteam/thm/kenobi.html">Kenobi</a>
+                <a href="/redteam/thm/vulnversity.html">Vulnversity</a>
               </div>
             </div>
           </div>

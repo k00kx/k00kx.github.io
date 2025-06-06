@@ -8,7 +8,7 @@
   <meta name="portfolio-title"       content="Overpass">
   <meta name="portfolio-description" content="TryHackMe Overpass room write-up.">
   <meta name="portfolio-tags"        content="tryhackme, overpass, linux, privilege-escalation">
-  <meta name="portfolio-thumb"       content="/img/RedTeam/thm/overpass/overpass_logo.png">
+  <meta name="portfolio-thumb"       content="/img/redteam/thm/overpass/overpass_logo.png">
   <meta name="portfolio-source"      content="TryHackMe">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +18,7 @@
 
   <script src="/js/script.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
-  <script src="/js/RedTeam/thm/overpass-content.js" defer></script>
+  <script src="/js/redteam/thm/overpass-content.js" defer></script>
   <script src="/js/catalog.js" defer></script>
 </head>
 
@@ -28,7 +28,7 @@
 
   <div class="machine-banner">
     <img
-      src="/img/RedTeam/thm/overpass/overpass_logo.png"
+      src="/img/redteam/thm/overpass/overpass_logo.png"
       alt="Overpass TryHackMe Logo"
       class="overpass-logo"
       style="filter: brightness(0) invert(1);"
@@ -45,7 +45,7 @@
     </p>
   </section>
 
-  <section id="RedTeam-summary"
+  <section id="redteam-summary"
            style="max-width:1300px; margin:25px auto 10px; padding:0 20px; text-align:center">
   </section>
 
@@ -74,7 +74,7 @@
     const tags = get('portfolio-tags')
                  .split(',').map(t => t.trim()).filter(Boolean);
 
-    const container = document.getElementById('RedTeam-summary');
+    const container = document.getElementById('redteam-summary');
     container.innerHTML = `
       <p style="font-size:1rem;color:#bbb;margin-bottom:18px">
         ${desc}

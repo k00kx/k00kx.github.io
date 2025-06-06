@@ -13,7 +13,7 @@
   <meta name="portfolio-tags"
         content="windows, smb, privilege-escalation">
   <meta name="portfolio-thumb"
-        content="/img/RedTeam/htb/fluffy/fluffy-logo.png">
+        content="/img/redteam/htb/fluffy/fluffy-logo.png">
   <meta name="portfolio-source"
         content="HackTheBox">
 
@@ -35,7 +35,7 @@
 
   <!--
     Script interno que:
-      1) Injeta descrição + tags em #RedTeam-summary
+      1) Injeta descrição + tags em #redteam-summary
       2) Faz fetch de fluffy.md, converte para HTML e injeta em #markdown-content
       3) Destaca em amarelo linhas começando com "~$"
   -->
@@ -47,21 +47,21 @@
         return el ? el.content.trim() : '';
       };
 
-      // Injeta resumo (descrição + tags) em #RedTeam-summary
+      // Injeta resumo (descrição + tags) em #redteam-summary
       const description = getMeta('portfolio-description');
       const tags        = getMeta('portfolio-tags')
                          .split(',')
                          .map(t => t.trim())
                          .filter(Boolean);
 
-      const summaryContainer = document.getElementById('RedTeam-summary');
+      const summaryContainer = document.getElementById('redteam-summary');
       summaryContainer.innerHTML = `
-        <p style="font-size:1rem;color:#bbb;margin-bottom:18px">
-          ${description}
+      <p style="font-size:1rem; color:#bbb; margin-bottom:18px; text-align:center">
+        ${description}
         </p>
         <div class="tag-list" style="justify-content:center">
           ${tags.map(t => `<span class="tag">${t}</span>`).join('')}
-        </div>
+          </div>
       `;
 
       // Faz fetch do fluffy.md (mesma pasta que fluffy.html)
@@ -112,7 +112,7 @@
 
   <div class="machine-banner">
     <img
-      src="/img/RedTeam/htb/fluffy/fluffy-logo.png"
+      src="/img/redteam/htb/fluffy/fluffy-logo.png"
       alt="Fluffy HTB Logo">
   </div>
 
@@ -129,7 +129,7 @@
 
   <!-- Onde o resumo (descrição + tags) será injetado dinamicamente -->
   <section
-    id="RedTeam-summary"
+    id="redteam-summary"
     class="markdown-container"
     style="margin-top:25px">
   </section>

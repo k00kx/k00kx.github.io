@@ -8,7 +8,7 @@
   <meta name="portfolio-title"       content="Vulnversity">
   <meta name="portfolio-description" content="TryHackMe Vulnverisity room write-up.">
   <meta name="portfolio-tags"        content="tryhackme, windows, privilege-escalation">
-  <meta name="portfolio-thumb"       content="/img/RedTeam/thm/vulnversity/vulnversity-logo.png">
+  <meta name="portfolio-thumb"       content="/img/redteam/thm/vulnversity/vulnversity-logo.png">
   <meta name="portfolio-source"      content="TryHackMe">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +18,7 @@
 
   <script src="/js/script.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
-  <script src="/js/RedTeam/thm/blue-content.js" defer></script>
+  <script src="/js/redteam/thm/blue-content.js" defer></script>
   <script src="/js/catalog.js" defer></script>
 </head>
 
@@ -28,7 +28,7 @@
 
   <div class="machine-banner">
     <img
-      src="/img/RedTeam/thm/vulnversity/vulnversity-logo.png"
+      src="/img/redteam/thm/vulnversity/vulnversity-logo.png"
       alt="Vulnervity TryHackMe Logo"
     >
   </div>
@@ -43,7 +43,7 @@
     </p>
   </section>
 
-  <section id="RedTeam-summary"
+  <section id="redteam-summary"
            style="max-width:1300px; margin:25px auto 10px; padding:0 20px; text-align:center">
   </section>
 
@@ -71,7 +71,7 @@
     const tags = get('portfolio-tags')
                  .split(',').map(t => t.trim()).filter(Boolean);
 
-    const container = document.getElementById('RedTeam-summary');
+    const container = document.getElementById('redteam-summary');
     container.innerHTML = `
       <p style="font-size:1rem;color:#bbb;margin-bottom:18px">
         ${desc}

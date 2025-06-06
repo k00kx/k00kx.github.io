@@ -80,24 +80,24 @@
     const isLabs   = lastPart === 'labs.html';
 
     // 1) BUSCA TODOS os <a> dentro de ".nav-links" cujo href:
-    //    - comece com "/RedTeam/"
+    //    - comece com "/redteam/"
     //    - termine com ".html"
     let links = Array.from(
-      document.querySelectorAll('.nav-links a[href^="/RedTeam/"][href$=".html"]')
+      document.querySelectorAll('.nav-links a[href^="/redteam/"][href$=".html"]')
     ).map(a => a.getAttribute('href'));
 
     // 2) Caso o menu esteja fechado (nenhum ".links a" visível), captura
     //    qualquer <a> em ".dropdown-content" com o mesmo critério:
     if (links.length === 0) {
       links = Array.from(
-        document.querySelectorAll('.nav-links .dropdown-content a[href^="/RedTeam/"][href$=".html"]')
+        document.querySelectorAll('.nav-links .dropdown-content a[href^="/redteam/"][href$=".html"]')
       ).map(a => a.getAttribute('href'));
     }
 
-    // 3) Em labs.html, filtramos para garantir que só fiquem URLs dentro de "/RedTeam/"
+    // 3) Em labs.html, filtramos para garantir que só fiquem URLs dentro de "/redteam/"
     //    (na prática já capturamos assim, mas deixamos por garantia):
     if (!isIndex && isLabs) {
-      links = links.filter(url => url.startsWith('/RedTeam/'));
+      links = links.filter(url => url.startsWith('/redteam/'));
     }
 
     // 4) Se ainda não encontrou nada, aborta (não renderiza cards)

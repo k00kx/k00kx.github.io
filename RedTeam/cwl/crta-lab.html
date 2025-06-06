@@ -13,7 +13,7 @@
   <meta name="portfolio-tags"
         content="red-team, active-directory, pivoting, privilege-escalation, golden-ticket">
   <meta name="portfolio-thumb"
-        content="/img/RedTeam/cwl/CRTA-01.png">
+        content="/img/redteam/cwl/CRTA-01.png">
   <meta name="portfolio-source"
         content="CyberWarFare">
   <!-- ────────────────────────────── -->
@@ -26,7 +26,7 @@
 
   <!--
     Substitui o antigo crta-content.js.
-    1) Injeta descrição + tags em #RedTeam-summary
+    1) Injeta descrição + tags em #redteam-summary
     2) Faz fetch de crta-lab.md, converte em HTML e injeta em #markdown-content
     3) Destaca em amarelo linhas começando com "~$"
   -->
@@ -44,7 +44,7 @@
                            .map(t => t.trim())
                            .filter(Boolean);
 
-      const summaryContainer = document.getElementById('RedTeam-summary');
+      const summaryContainer = document.getElementById('redteam-summary');
       summaryContainer.innerHTML = `
         <p style="font-size:1rem;color:#bbb;margin-bottom:18px">
           ${description}
@@ -101,7 +101,7 @@
   <!-- banner da máquina -->
   <div class="machine-banner">
     <img
-      src="/img/RedTeam/cwl/CRTA-01.png"
+      src="/img/redteam/cwl/CRTA-01.png"
       alt="CRTA-Lab Logo"
     >
   </div>
@@ -118,7 +118,7 @@
   </section>
 
   <!-- resumo + tags (injetado por script) -->
-  <section id="RedTeam-summary"
+  <section id="redteam-summary"
            style="max-width:1300px;margin:25px auto 10px;padding:0 20px;text-align:center">
   </section>
 
