@@ -66,7 +66,7 @@ function renderHeader() {
       <nav class="nav-links">
         <button class="dropbtn" onclick="location.href='/index.html'">Home</button>
 
-        <button class="dropbtn" onclick="location.href='/whoami.html'">Whoami</button>
+        <button class="dropbtn" onclick="location.href='/whoami/whoami.html'">Whoami</button>
 
         <!-- 3) redteam (continuamos usando dropdown normal) -->
         <div class="dropdown">
