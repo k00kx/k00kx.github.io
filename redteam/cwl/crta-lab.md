@@ -561,26 +561,32 @@ Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
   With all necessary artifacts in hand, a Golden Ticket was forged using Impacket’s<code>ticketer.py</code>script. This forged Kerberos ticket enables authentication as a highly privileged account in the parent domain without requiring the original user’s credentials. The following critical components were collected for ticket creation:
 </p>
 
-<div style="display: flex; justify-content: center; margin: 2em 0;">
-  <table style="border-collapse: collapse; border: 1px solid #444; min-width: 420px;">
+<div style="overflow-x:auto; margin: 2em 0;">
+  <table style="border-collapse: collapse; border: 1px solid #444; width:100%; table-layout:fixed;">
     <thead>
       <tr>
-        <th style="border: 1px solid #555; padding: 8px 16px; text-align: center;">Component</th>
-        <th style="border: 1px solid #555; padding: 8px 16px; text-align: center;">Value</th>
+        <th style="border: 1px solid #555; padding: 8px 16px; text-align: center; width:30%;">Component</th>
+        <th style="border: 1px solid #555; padding: 8px 16px; text-align: center; width:70%;">Value</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td style="border: 1px solid #555; padding: 8px 16px;">krbtgt AES256</td>
-        <td style="border: 1px solid #555; padding: 8px 16px;">ad8c273289e4c511b4363c43c08f9a5aff06f8fe002c10ab1031da11152611b2</td>
+        <td style="border: 1px solid #555; padding: 8px 16px; word-break: break-all; white-space: normal;">
+          ad8c273289e4c511b4363c43c08f9a5aff06f8fe002c10ab1031da11152611b2
+        </td>
       </tr>
       <tr>
         <td style="border: 1px solid #555; padding: 8px 16px;">Child Domain SID</td>
-        <td style="border: 1px solid #555; padding: 8px 16px;">S-1-5-21-3754860944-83624914-1883974761</td>
+        <td style="border: 1px solid #555; padding: 8px 16px; word-break: break-all; white-space: normal;">
+          S-1-5-21-3754860944-83624914-1883974761
+        </td>
       </tr>
       <tr>
         <td style="border: 1px solid #555; padding: 8px 16px;">Parent Domain SID</td>
-        <td style="border: 1px solid #555; padding: 8px 16px;">S-1-5-21-3375883379-808943238-3239386119</td>
+        <td style="border: 1px solid #555; padding: 8px 16px; word-break: break-all; white-space: normal;">
+          S-1-5-21-3375883379-808943238-3239386119
+        </td>
       </tr>
     </tbody>
   </table>
