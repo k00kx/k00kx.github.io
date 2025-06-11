@@ -78,10 +78,6 @@ function renderHeader() {
                 <a href="/redteam/htb/puppy.html">Puppy</a>
                 <a href="/redteam/htb/fluffy.html">Fluffy</a>
                 <a href="/redteam/cwl/crta-lab.html">CRTA-Lab</a>
-                <a href="/redteam/thm/overpass.html">Overpass</a>
-                <a href="/redteam/thm/blue.html">Blue</a>
-                <a href="/redteam/thm/kenobi.html">Kenobi</a>
-                <a href="/redteam/thm/vulnversity.html">Vulnversity</a>
               </div>
             </div>
           </div>
