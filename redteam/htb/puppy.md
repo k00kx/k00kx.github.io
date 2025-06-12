@@ -12,8 +12,6 @@ Below is the achievement badge earned upon completing this machine, validating t
 
 ---
 
-### 📝 Machine Information
-
 <br><p class="indent-paragraph">
 As is common in real life pentests, you will start the Puppy box with credentials for the following account:
 <span class="blue">levi.james</span>:<span class="red">KingofAkron2025!</span>
