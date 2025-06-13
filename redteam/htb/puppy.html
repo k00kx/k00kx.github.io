@@ -1,129 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Puppy</title>
 
-  <!-- Metadados para gerar o card automaticamente (common-listing.js) -->
-  <meta name="portfolio-title" content="Puppy">
-  <meta name="portfolio-description"
-    content="Full Active-Directory compromise, DPAPI abuse and privilege escalation on Windows Server 2022.">
-  <meta name="portfolio-tags" content="windows, active-directory, privilege-escalation, bloodhound, dpapi">
-  <meta name="portfolio-thumb" content="/img/redteam/htb/puppy/puppy-logo.png">
-  <meta name="portfolio-source" content="HackTheBox">
+  <!-- Meta para card (common-listing.js) -->
+  <meta name="portfolio-title"       content="Puppy">
+  <meta name="portfolio-description" content="Full Active-Directory compromise, DPAPI abuse and privilege escalation on Windows Server 2022.">
+  <meta name="portfolio-tags"        content="windows, active-directory, privilege-escalation, bloodhound, dpapi">
+  <meta name="portfolio-thumb"       content="/img/redteam/htb/puppy/puppy-logo.png">
+  <meta name="portfolio-source"      content="HackTheBox">
 
-  <!-- Fonte e CSS principal -->
+  <!-- Fonte e CSS principais -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
 
-  <!-- Script do menu/particles (permanece inalterado) -->
-  <script src="/js/script.js" defer></script>
-
-  <!-- Biblioteca markdown-it via CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js" defer></script>
-
-  <!--
-    Este script interno substitui o antigo puppy-content.js.
-    Ele:
-      1) Lê as metas do <head> (descrição + tags) e injeta em #redteam-summary
-      2) Faz fetch de puppy.md, converte para HTML e injeta em #markdown-content
-      3) Destaca em amarelo as linhas que começam com "~$" dentro de <pre><code>
-  -->
-  <script defer>
-    document.addEventListener('DOMContentLoaded', async () => {
-      // 1) Função utilitária para ler <meta name="…">
-      const getMeta = name => {
-        const el = document.querySelector(`meta[name="${name}"]`);
-        return el ? el.content.trim() : '';
-      };
-
-      // 2) Injeta resumo (descrição + tags) em #redteam-summary
-      const description = getMeta('portfolio-description');
-      const tags = getMeta('portfolio-tags')
-        .split(',')
-        .map(t => t.trim())
-        .filter(Boolean);
-
-      const summaryContainer = document.getElementById('redteam-summary');
-      summaryContainer.innerHTML = `
-      <p style="font-size:1rem; color:#bbb; margin-bottom:18px; text-align:center">
-        ${description}
-        </p>
-        <div class="tag-list" style="justify-content:center">
-          ${tags.map(t => `<span class="tag">${t}</span>`).join('')}
-          </div>
-`;
-
-      // 3) Faz fetch do puppy.md (mesma pasta que puppy.html)
-      try {
-        const resp = await fetch('puppy.md', { cache: 'no-cache' });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const mdText = await resp.text();
-
-        // 4) Inicializa markdown-it e converte
-        const md = window.markdownit({
-          html: true,        // permite HTML embutido, se houver
-          linkify: true,     // converte URLs automáticos em links
-          typographer: true  // ativar substituições tipográficas
-        });
-        const renderedHTML = md.render(mdText);
-
-        // 5) Injeta o HTML convertido em #markdown-content
-        document.getElementById('markdown-content').innerHTML = renderedHTML;
-
-        // 6) Destaca em amarelo as linhas que começam com "~$" dentro de cada <pre><code>
-        document.querySelectorAll('.markdown-body pre code').forEach(block => {
-          block.innerHTML = block.innerHTML
-            .split('\n')
-            .map(line =>
-              line.trimStart().startsWith('~$')
-                ? `<span style="color:#FFD700;font-weight:bold;">${line}</span>`
-                : line
-            )
-            .join('\n');
-        });
-      }
-      catch (err) {
-        console.error('Erro ao carregar Markdown:', err);
-        document.getElementById('markdown-content').innerHTML = `
-          <p style="color:red; text-align:center">
-            Falha ao carregar conteúdo Markdown.<br>
-            (${err.message})
-          </p>
-        `;
-      }
-    });
-  </script>
+  <!-- AOS (scroll animations) -->
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
 
 <body class="home">
   <div id="tsparticles"></div>
   <header id="header-container"></header>
 
-  <div class="machine-banner">
+  <div class="machine-banner" data-aos="fade-up">
     <img src="/img/redteam/htb/puppy/puppy-logo.png" alt="Puppy HTB Logo">
   </div>
 
-  <section style="text-align:center;margin-top:20px">
+  <section style="text-align:center;margin-top:20px" data-aos="fade-up">
     <p><strong>Difficulty:</strong> Medium</p>
     <p><strong>OS:</strong> Windows</p>
     <p>
-      <a href="https://www.hackthebox.com/machines/puppy" target="_blank" class="htb-link">🔗 Link to HTB</a>
+      <a href="https://www.hackthebox.com/machines/puppy"
+         target="_blank" class="htb-link">🔗 Link to HTB</a>
     </p>
   </section>
 
-  <!-- Onde o resumo (descrição + tags) será injetado dinamicamente -->
-  <section id="redteam-summary" class="markdown-container" style="margin-top:25px">
+  <!-- Resumo (descrição + tags) -->
+  <section id="redteam-summary"
+           class="markdown-container"
+           style="margin-top:25px"
+           data-aos="fade-up">
   </section>
 
+  <!-- Conteúdo Markdown -->
   <main class="markdown-container">
-    <!-- Aqui entra o HTML convertido do puppy.md -->
-    <article id="markdown-content" class="markdown-body"></article>
+    <article id="markdown-content"
+             class="markdown-body"
+             data-aos="fade-up">
+    </article>
   </main>
-</body>
 
+  <!-- Scripts -->
+  <script src="/js/script.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js" defer></script>
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1) Injeta resumo
+      const getMeta = name =>
+        document.querySelector(`meta[name="${name}"]`)?.content.trim() || '';
+      const desc = getMeta('portfolio-description');
+      const tags = getMeta('portfolio-tags').split(',').map(t => t.trim()).filter(Boolean);
+      document.getElementById('redteam-summary').innerHTML = `
+        <p style="font-size:1rem;color:#bbb;margin-bottom:18px;text-align:center">
+          ${desc}
+        </p>
+        <div class="tag-list" style="justify-content:center">
+          ${tags.map(t=>`<span class="tag">${t}</span>`).join('')}
+        </div>`;
+
+      // 2) Carrega e renderiza Markdown
+      try {
+        const resp = await fetch('puppy.md', { cache: 'no-cache' });
+        if (!resp.ok) throw new Error(resp.status);
+        const mdText = await resp.text();
+        const md = window.markdownit({ html:true, linkify:true, typographer:true });
+        const html = md.render(mdText);
+        const container = document.getElementById('markdown-content');
+        container.innerHTML = html;
+
+        // marca cada bloco para animação AOS
+        document.querySelectorAll('#markdown-content > *')
+          .forEach(el => el.setAttribute('data-aos','fade-up'));
+
+        // destaca linhas iniciadas em "~$"
+        document.querySelectorAll('.markdown-body pre code').forEach(block => {
+          block.innerHTML = block.innerHTML.split('\n').map(line =>
+            line.trimStart().startsWith('~$')
+              ? `<span style="color:#FFD700;font-weight:bold;">${line}</span>`
+              : line
+          ).join('\n');
+        });
+      } catch (e) {
+        document.getElementById('markdown-content').innerHTML =
+          `<p style="color:red;text-align:center">Failed to load Markdown (${e.message})</p>`;
+      }
+
+      // 3) Inicia AOS
+      AOS.init({ once:false, mirror:true, duration:600, offset:120 });
+    });
+  </script>
+</body>
 </html>
