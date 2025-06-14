@@ -95,6 +95,12 @@
               : line
           ).join('\n');
         });
+        
+        // 5) toda vez que uma imagem dentro do seu conteúdo carregar, força recálculo
+        document
+          .querySelectorAll('#markdown-content img')
+          .forEach(img => img.addEventListener('load', () => AOS.refreshHard()));
+
       } catch (e) {
         document.getElementById('markdown-content').innerHTML =
           `<p style="color:red;text-align:center">Failed to load Markdown (${e.message})</p>`;
@@ -103,6 +109,9 @@
       // 3) Inicia AOS
       AOS.init({ once:false, mirror:true, duration:600, offset:120 });
     });
+
+    // 4) Quando tudo da página (incluindo imagens estáticas) terminar de carregar:
+    window.addEventListener('load', () => AOS.refreshHard());
   </script>
 </body>
 </html>
