@@ -86,5 +86,4 @@ Dec 2021 – Nov 2022
 
 • Crafted tailored remediation plans and advised clients on best practices.
 ```
-<div class="dot-divider" data-aos="fade-up"></div>
 
