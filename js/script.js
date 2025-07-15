@@ -78,6 +78,7 @@ function renderHeader() {
                 <a href="/redteam/htb/puppy.html">Puppy</a>
                 <a href="/redteam/htb/fluffy.html">Fluffy</a>
                 <a href="/redteam/cwl/crta-lab.html">CRTA-Lab</a>
+                <a href="/redteam/htb/certificate.html">Certificate</a>
               </div>
             </div>
           </div>
