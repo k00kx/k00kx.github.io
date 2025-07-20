@@ -616,13 +616,13 @@ Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
 ```
 
 <p class="indent-paragraph">
-  Despite the deprecation warnings about using <code>datetime.utcnow()</code> (which recommend switching to timezone-aware objects), the <code>ticketer.py</code> script successfully generated a valid TGT for the <code>corpmngr</code> user that embeds both child and parent domain privileges. The final ticket was stored in <code>corpmngr.ccache</code>, confirming successful ticket creation.
+  Despite the deprecation warnings about using <code>datetime.utcnow()</code> (which recommend switching to timezone-aware objects), the <code>ticketer.py</code> script successfully generated a valid TGT for the <code>corpmngr</code> user that embeds both child and parent domain privileges. The final ticket was stored in <code>corpmngr.ccache</code><span class="codefix">,</span> confirming successful ticket creation.
 </p>
 
 ### 📡 Launching the Ligolo Proxy
 
 <p class="indent-paragraph">
-  To synchronize the attacker’s system clock via NTP, full IP-level access to the internal subnet <code>192.168.98.0/24</code> was required. A Ligolo-ng pivot was deployed by creating and activating a TUN interface named <code>ligolo</code>, then routing the internal network range through it. This established an encrypted tunnel through the compromised host, allowing <code>ntpdate</code> to query the Domain Controller’s time.
+  To synchronize the attacker’s system clock via NTP, full IP-level access to the internal subnet <code>192.168.98.0/24</code> was required. A Ligolo-ng pivot was deployed by creating and activating a TUN interface named <code>ligolo</code><span class="codefix">,</span> then routing the internal network range through it. This established an encrypted tunnel through the compromised host, allowing <code>ntpdate</code> to query the Domain Controller’s time.
 </p>
 
 ```
@@ -723,7 +723,7 @@ Sat May  3 20:26:04 UTC 2025
 ```
 
 <p class="indent-paragraph">
-A Service Ticket for the CIFS SPN on the parent DC was requested. Impacket’s <code>getST.py</code> was invoked to obtain the TGS for <code>CIFS/child.warfare.corp</code>, connecting to both the child and parent KDCs and saving the resulting ticket to a new cache file.
+A Service Ticket for the CIFS SPN on the parent DC was requested. Impacket’s <code>getST.py</code> was invoked to obtain the TGS for <code>CIFS/child.warfare.corp</code><span class="codefix">,</span> connecting to both the child and parent KDCs and saving the resulting ticket to a new cache file.
 </p>
 
 ```

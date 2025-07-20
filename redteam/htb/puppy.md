@@ -282,7 +282,7 @@ If this reoccurs, then your database file may be corrupt. (HMAC mismatch)
 ```
 
 <p class="indent-paragraph">
-Faced with a modern KeePass database unsupported by traditional tools like <code>keepass2john</code><span class="codefix">,</span> an alternative was needed. The Python-based tool <a href="https://github.com/r3nt0n/keepass4brute" target="_blank"><code>keepass4brute</code></a> proved effective for this scenario. A dictionary attack using the classic <code>rockyou.txt</code> wordlist was launched, and although the process was slow, success eventually came with the word <code>liverpool</code>, the correct password to unlock the secrets stored within <code>recovery.kdbx</code><span class="codefix">.</span>
+Faced with a modern KeePass database unsupported by traditional tools like <code>keepass2john</code><span class="codefix">,</span> an alternative was needed. The Python-based tool <a href="https://github.com/r3nt0n/keepass4brute" target="_blank"><code>keepass4brute</code></a> proved effective for this scenario. A dictionary attack using the classic <code>rockyou.txt</code> wordlist was launched, and although the process was slow, success eventually came with the word <code>liverpool</code><span class="codefix">,</span> the correct password to unlock the secrets stored within <code>recovery.kdbx</code><span class="codefix">.</span>
 </p>
 
 

@@ -321,7 +321,7 @@ To assess privilege escalation opportunities from the current user context, we l
 ### 🔐 Shadow Credentials Injection
 
 <p class="indent-paragraph">
-During graph exploration from the context of <code>p.agila@fluffy.htb</code><span class="codefix">,</span> we identified that the user had transitive visibility into several service accounts and privileged groups. One notable finding was the account <code>WINRM_SVC@FLUFFY.HTB</code> being a direct member of the <span class="blue">Remote Management Users</span> group. This group grants access to WinRM (via <code>WSMan</code>), making its members suitable candidates for remote command execution through tools like <code>Evil-WinRM</code>. This discovery provided a viable path to achieve remote access by targeting accounts with legitimate permissions, reducing detection risk while maintaining operational integrity.
+During graph exploration from the context of <code>p.agila@fluffy.htb</code><span class="codefix">,</span> we identified that the user had transitive visibility into several service accounts and privileged groups. One notable finding was the account <code>WINRM_SVC@FLUFFY.HTB</code> being a direct member of the <span class="blue">Remote Management Users</span> group. This group grants access to WinRM (via <code>WSMan</code>), making its members suitable candidates for remote command execution through tools like <code>Evil-WinRM</code><span class="codefix">.</span> This discovery provided a viable path to achieve remote access by targeting accounts with legitimate permissions, reducing detection risk while maintaining operational integrity.
 </p>
 
 <p class="indent-paragraph">
@@ -347,7 +347,7 @@ By leveraging the <code>GenericWrite</code> privilege over <code>WINRM_SVC</code
 ```
 
 <p class="indent-paragraph">
-  <span class="red">Note:</span> Kerberos-based authentication mechanisms are sensitive to time discrepancies between the client and the domain controller. If the local system clock is skewed, operations like ticket requests or certificate-based logins may fail with errors such as <code>KRB_AP_ERR_SKEW</code>. Since tools like <code>ntpdate</code> rely on UDP, the domain controller must be reachable — either directly or via a pivot tunnel (e.g., Ligolo) — for synchronization. To avoid such issues, we used a Bash script that queries the current time from the DC and updates the attacker's local system clock in UTC. This step is essential to ensure reliable Kerberos interactions during shadow credential injection and certificate abuse.
+  <span class="red">Note:</span> Kerberos-based authentication mechanisms are sensitive to time discrepancies between the client and the domain controller. If the local system clock is skewed, operations like ticket requests or certificate-based logins may fail with errors such as <code>KRB_AP_ERR_SKEW</code><span class="codefix">.</span> Since tools like <code>ntpdate</code> rely on UDP, the domain controller must be reachable — either directly or via a pivot tunnel (e.g., Ligolo) — for synchronization. To avoid such issues, we used a Bash script that queries the current time from the DC and updates the attacker's local system clock in UTC. This step is essential to ensure reliable Kerberos interactions during shadow credential injection and certificate abuse.
 </p>
 
 ```
@@ -535,7 +535,7 @@ With a valid <code>ccache</code> file obtained for the <code>CA_SVC</code> accou
 ```
 
 <p class="indent-paragraph">
-To extract key attributes and verify the configuration of the <code>ca_svc</code> account — a privileged identity tied to certificate services — we employed the <code>account</code> module of <code>Certipy</code>, authenticated via NT hash<span class="codefix">.</span> This enumeration revealed metadata such as the <code>servicePrincipalName</code>, <code>userPrincipalName</code>, and <code>distinguishedName</code><span class="codefix">,</span> confirming the account’s association with the Active Directory Certificate Services (ADCS) infrastructure<span class="codefix">.</span> The presence of an SPN (<code>ADCS/ca.fluffy.htb</code>) further validates its role as a service account, which can be leveraged for Kerberos-based operations such as S4U abuse or certificate-based privilege escalation<span class="codefix">.</span>
+To extract key attributes and verify the configuration of the <code>ca_svc</code> account — a privileged identity tied to certificate services — we employed the <code>account</code> module of <code>Certipy</code><span class="codefix">,</span> authenticated via NT hash<span class="codefix">.</span> This enumeration revealed metadata such as the <code>servicePrincipalName</code><span class="codefix">,</span> <code>userPrincipalName</code><span class="codefix">,</span> and <code>distinguishedName</code><span class="codefix">,</span> confirming the account’s association with the Active Directory Certificate Services (ADCS) infrastructure<span class="codefix">.</span> The presence of an SPN (<code>ADCS/ca.fluffy.htb</code>) further validates its role as a service account, which can be leveraged for Kerberos-based operations such as S4U abuse or certificate-based privilege escalation<span class="codefix">.</span>
 </p>
 
 ```
@@ -629,7 +629,7 @@ SMB         <IP>     445    DC01             [+] fluffy.htb\administrator:8da83a
 ```
 
 <p class="indent-paragraph">
-With the NT hash of <code>Administrator</code> extracted and validated, we concluded the privilege escalation chain by executing <code>psexec</code> over SMB using Impacket’s toolkit. By supplying the recovered hash and targeting the domain controller <code>dc.fluffy.htb</code>, we were able to spawn a fully interactive SYSTEM shell under the context of the domain administrator. This method allowed us to bypass interactive login restrictions and directly execute commands on the host. Once inside the session, we navigated to the Administrator's desktop and successfully retrieved the final flag <code>root.txt</code><span class="codefix">,</span> confirming complete compromise of the target domain controller.
+With the NT hash of <code>Administrator</code> extracted and validated, we concluded the privilege escalation chain by executing <code>psexec</code> over SMB using Impacket’s toolkit. By supplying the recovered hash and targeting the domain controller <code>dc.fluffy.htb</code><span class="codefix">,</span> we were able to spawn a fully interactive SYSTEM shell under the context of the domain administrator. This method allowed us to bypass interactive login restrictions and directly execute commands on the host. Once inside the session, we navigated to the Administrator's desktop and successfully retrieved the final flag <code>root.txt</code><span class="codefix">,</span> confirming complete compromise of the target domain controller.
 </p>
 
 ```
